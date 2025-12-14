@@ -1,7 +1,9 @@
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { DEFAULT_LAW_FIRM_CONTENT } from '@/lib/content/defaults'
-import type { PageContent, Section } from '@/lib/content/types'
+import type { PageContent } from '@/lib/content/types'
 import { SitePageClient } from './SitePageClient'
+import { generateSiteMetadata, generateStructuredData } from '@/lib/seo/metadata'
 
 async function getPageContent(siteSlug: string): Promise<{ content: PageContent; isOwner: boolean }> {
   // Skip database lookup if Supabase isn't configured
@@ -46,18 +48,34 @@ async function getPageContent(siteSlug: string): Promise<{ content: PageContent;
   }
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: { siteSlug: string }
+}): Promise<Metadata> {
+  const { content } = await getPageContent(params.siteSlug)
+  return generateSiteMetadata({ siteSlug: params.siteSlug, content })
+}
+
 export default async function SitePage({
   params,
 }: {
   params: { siteSlug: string }
 }) {
   const { content, isOwner } = await getPageContent(params.siteSlug)
+  const structuredData = generateStructuredData(content, params.siteSlug)
 
   return (
-    <SitePageClient
-      content={content}
-      isOwner={isOwner}
-      siteSlug={params.siteSlug}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <SitePageClient
+        content={content}
+        isOwner={isOwner}
+        siteSlug={params.siteSlug}
+      />
+    </>
   )
 }
