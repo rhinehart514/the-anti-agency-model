@@ -192,6 +192,11 @@ export function generatePageContent(wizard: WizardState): PageContent {
       email: wizard.businessInfo.email,
       address: wizard.businessInfo.address || '',
     },
+    branding: {
+      colorScheme: wizard.branding.colorScheme || 'default',
+      tone: wizard.branding.tone || 'professional',
+      industry: wizard.industry || undefined,
+    },
     sections: [
       {
         type: 'hero',

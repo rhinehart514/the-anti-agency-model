@@ -105,6 +105,38 @@ export interface Database {
           created_by?: string | null
         }
       }
+      contact_submissions: {
+        Row: {
+          id: string
+          site_id: string
+          name: string
+          email: string
+          phone: string | null
+          message: string
+          created_at: string
+          is_read: boolean
+        }
+        Insert: {
+          id?: string
+          site_id: string
+          name: string
+          email: string
+          phone?: string | null
+          message: string
+          created_at?: string
+          is_read?: boolean
+        }
+        Update: {
+          id?: string
+          site_id?: string
+          name?: string
+          email?: string
+          phone?: string | null
+          message?: string
+          created_at?: string
+          is_read?: boolean
+        }
+      }
     }
     Views: {
       [_ in never]: never

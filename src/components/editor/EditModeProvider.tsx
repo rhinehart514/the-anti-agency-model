@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import type { PageContent, Section } from '@/lib/content/types'
+import { useToast } from '@/components/ui/Toast'
 
 export interface SelectedElement {
   content: string
@@ -45,6 +46,7 @@ export function EditModeProvider({
   siteSlug,
   pageSlug,
 }: EditModeProviderProps) {
+  const { showToast } = useToast()
   const [isEditMode, setIsEditMode] = useState(isOwner)
   const [isPreviewing, setIsPreviewing] = useState(false)
   const [content, setContent] = useState<PageContent>(initialContent)
@@ -96,18 +98,20 @@ export function EditModeProvider({
 
       setOriginalContent(content)
       setPendingChanges(false)
+      showToast('Changes saved successfully', 'success')
     } catch (error) {
       console.error('Save failed:', error)
-      // TODO: Show error toast
+      showToast('Failed to save changes. Please try again.', 'error')
     } finally {
       setIsSaving(false)
     }
-  }, [content, pendingChanges, isSaving, siteSlug, pageSlug])
+  }, [content, pendingChanges, isSaving, siteSlug, pageSlug, showToast])
 
   const discardChanges = useCallback(() => {
     setContent(originalContent)
     setPendingChanges(false)
-  }, [originalContent])
+    showToast('Changes discarded', 'info')
+  }, [originalContent, showToast])
 
   return (
     <EditModeContext.Provider

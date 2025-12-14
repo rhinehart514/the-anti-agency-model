@@ -50,6 +50,20 @@ CREATE TABLE content_versions (
 );
 
 -- ============================================
+-- Contact Submissions Table
+-- ============================================
+CREATE TABLE contact_submissions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  site_id UUID REFERENCES sites(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  message TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
 -- Indexes
 -- ============================================
 CREATE INDEX idx_sites_slug ON sites(slug);
@@ -57,6 +71,8 @@ CREATE INDEX idx_sites_owner ON sites(owner_id);
 CREATE INDEX idx_pages_site ON pages(site_id);
 CREATE INDEX idx_pages_slug ON pages(site_id, slug);
 CREATE INDEX idx_versions_page ON content_versions(page_id);
+CREATE INDEX idx_contact_site ON contact_submissions(site_id);
+CREATE INDEX idx_contact_created ON contact_submissions(created_at DESC);
 
 -- ============================================
 -- Updated At Trigger
@@ -85,6 +101,7 @@ CREATE TRIGGER pages_updated_at
 ALTER TABLE sites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE content_versions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE contact_submissions ENABLE ROW LEVEL SECURITY;
 
 -- Public can read published pages (for viewing sites)
 CREATE POLICY "Public can view published pages"
@@ -127,6 +144,29 @@ CREATE POLICY "Owners can manage versions"
       SELECT p.id FROM pages p
       JOIN sites s ON p.site_id = s.id
       WHERE s.owner_id = auth.uid()
+    )
+  );
+
+-- Public can submit contact forms
+CREATE POLICY "Public can submit contact forms"
+  ON contact_submissions FOR INSERT
+  WITH CHECK (true);
+
+-- Owners can view contact submissions for their sites
+CREATE POLICY "Owners can view their contact submissions"
+  ON contact_submissions FOR SELECT
+  USING (
+    site_id IN (
+      SELECT id FROM sites WHERE owner_id = auth.uid()
+    )
+  );
+
+-- Owners can update contact submissions (mark as read)
+CREATE POLICY "Owners can update their contact submissions"
+  ON contact_submissions FOR UPDATE
+  USING (
+    site_id IN (
+      SELECT id FROM sites WHERE owner_id = auth.uid()
     )
   );
 

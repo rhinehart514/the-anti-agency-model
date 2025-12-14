@@ -1,7 +1,9 @@
 'use client'
 
 import { useCallback, useRef, useState } from 'react'
+import { useParams } from 'next/navigation'
 import { useEditMode } from './EditModeProvider'
+import { useToast } from '@/components/ui/Toast'
 
 interface EditableImageProps {
   src: string
@@ -19,6 +21,9 @@ export function EditableImage({
   aspectRatio = '16/9',
 }: EditableImageProps) {
   const { isEditMode } = useEditMode()
+  const { showToast } = useToast()
+  const params = useParams()
+  const siteSlug = params.siteSlug as string
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [showAltModal, setShowAltModal] = useState(false)
@@ -35,24 +40,43 @@ export function EditableImage({
       const file = e.target.files?.[0]
       if (!file) return
 
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024
+      if (file.size > maxSize) {
+        showToast('Image must be less than 5MB', 'error')
+        return
+      }
+
       setIsUploading(true)
 
       try {
-        // For now, convert to base64 data URL
-        // In production, upload to Supabase Storage
-        const reader = new FileReader()
-        reader.onload = () => {
-          const dataUrl = reader.result as string
-          onChange(dataUrl, alt)
-          setIsUploading(false)
+        const formData = new FormData()
+        formData.append('file', file)
+        if (siteSlug) {
+          formData.append('siteSlug', siteSlug)
         }
-        reader.readAsDataURL(file)
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to upload')
+        }
+
+        onChange(data.url, alt)
+        showToast('Image uploaded successfully', 'success')
       } catch (error) {
         console.error('Upload failed:', error)
+        showToast('Failed to upload image', 'error')
+      } finally {
         setIsUploading(false)
       }
     },
-    [onChange, alt]
+    [onChange, alt, siteSlug, showToast]
   )
 
   const handleAltSave = useCallback(() => {

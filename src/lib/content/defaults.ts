@@ -7,6 +7,11 @@ export const DEFAULT_LAW_FIRM_CONTENT: PageContent = {
     email: 'info@smithjohnsonlaw.com',
     address: '123 Legal Avenue, Suite 500\nSan Francisco, CA 94102',
   },
+  branding: {
+    colorScheme: 'professional',
+    tone: 'professional',
+    industry: 'law-firm',
+  },
   sections: [
     {
       type: 'hero',
