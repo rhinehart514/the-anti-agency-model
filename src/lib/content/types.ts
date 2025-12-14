@@ -135,6 +135,12 @@ export const SectionSchema = z.discriminatedUnion('type', [
   FooterSectionSchema,
 ])
 
+export const BrandingSchema = z.object({
+  colorScheme: z.string().default('default'),
+  tone: z.enum(['professional', 'friendly', 'bold', 'traditional']).default('professional'),
+  industry: z.string().optional(),
+})
+
 export const PageContentSchema = z.object({
   sections: z.array(SectionSchema),
   siteInfo: z.object({
@@ -143,6 +149,7 @@ export const PageContentSchema = z.object({
     email: z.string(),
     address: z.string(),
   }),
+  branding: BrandingSchema.optional(),
 })
 
 // ============================================
@@ -167,4 +174,5 @@ export type ContactSection = z.infer<typeof ContactSectionSchema>
 export type FooterSection = z.infer<typeof FooterSectionSchema>
 
 export type Section = z.infer<typeof SectionSchema>
+export type Branding = z.infer<typeof BrandingSchema>
 export type PageContent = z.infer<typeof PageContentSchema>

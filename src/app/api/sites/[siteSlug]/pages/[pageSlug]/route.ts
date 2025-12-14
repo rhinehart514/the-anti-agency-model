@@ -6,7 +6,7 @@ export async function GET(
   request: Request,
   { params }: { params: { siteSlug: string; pageSlug: string } }
 ) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Get the site
   const { data: site, error: siteError } = await supabase
@@ -38,7 +38,7 @@ export async function PUT(
   request: Request,
   { params }: { params: { siteSlug: string; pageSlug: string } }
 ) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Check authentication
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -109,4 +109,55 @@ export async function PUT(
   }
 
   return NextResponse.json(updatedPage)
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { siteSlug: string; pageSlug: string } }
+) {
+  const supabase = await createClient()
+
+  // Check authentication
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // Can't delete home page
+  if (params.pageSlug === 'home') {
+    return NextResponse.json(
+      { error: 'Cannot delete the home page' },
+      { status: 400 }
+    )
+  }
+
+  // Get the site and verify ownership
+  const { data: site, error: siteError } = await supabase
+    .from('sites')
+    .select('id, owner_id')
+    .eq('slug', params.siteSlug)
+    .single()
+
+  if (siteError || !site) {
+    return NextResponse.json({ error: 'Site not found' }, { status: 404 })
+  }
+
+  if (site.owner_id !== user.id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  // Delete the page
+  const { error: deleteError } = await supabase
+    .from('pages')
+    .delete()
+    .eq('site_id', site.id)
+    .eq('slug', params.pageSlug)
+
+  if (deleteError) {
+    console.error('Error deleting page:', deleteError)
+    return NextResponse.json({ error: 'Failed to delete page' }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true })
 }

@@ -3,10 +3,11 @@
 import { useState } from 'react'
 import { useEditMode } from './EditModeProvider'
 import { EditTab } from './sidebar/EditTab'
+import { PagesTab } from './sidebar/PagesTab'
 import { AgentTab } from './sidebar/AgentTab'
 import { HelpTab } from './sidebar/HelpTab'
 
-type TabId = 'edit' | 'agent' | 'help'
+type TabId = 'edit' | 'pages' | 'agent' | 'help'
 
 interface Tab {
   id: TabId
@@ -34,8 +35,17 @@ export function Sidebar() {
       ),
     },
     {
+      id: 'pages',
+      label: 'Pages',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+    },
+    {
       id: 'agent',
-      label: 'Agent',
+      label: 'AI',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -121,6 +131,7 @@ export function Sidebar() {
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'edit' && <EditTab />}
+        {activeTab === 'pages' && <PagesTab />}
         {activeTab === 'agent' && <AgentTab />}
         {activeTab === 'help' && <HelpTab />}
       </div>

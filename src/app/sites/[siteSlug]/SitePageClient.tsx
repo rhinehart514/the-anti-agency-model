@@ -1,6 +1,7 @@
 'use client'
 
 import { EditModeProvider, EditToolbar, useEditMode, Sidebar } from '@/components/editor'
+import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import type { PageContent, Section } from '@/lib/content/types'
 import {
   Navigation,
@@ -26,19 +27,23 @@ function getSectionByType<T extends Section['type']>(
 }
 
 export function SitePageClient({ content, isOwner, siteSlug }: SitePageClientProps) {
+  const colorScheme = content.branding?.colorScheme || 'default'
+
   return (
-    <EditModeProvider
-      isOwner={isOwner}
-      initialContent={content}
-      siteSlug={siteSlug}
-      pageSlug="home"
-    >
-      <SiteContentWrapper>
-        <SiteContentInner />
-      </SiteContentWrapper>
-      {isOwner && <EditToolbar />}
-      <Sidebar />
-    </EditModeProvider>
+    <ThemeProvider colorSchemeId={colorScheme}>
+      <EditModeProvider
+        isOwner={isOwner}
+        initialContent={content}
+        siteSlug={siteSlug}
+        pageSlug="home"
+      >
+        <SiteContentWrapper>
+          <SiteContentInner />
+        </SiteContentWrapper>
+        {isOwner && <EditToolbar />}
+        <Sidebar />
+      </EditModeProvider>
+    </ThemeProvider>
   )
 }
 
