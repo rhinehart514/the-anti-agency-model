@@ -1,0 +1,173 @@
+-- ============================================
+-- The Anti-Agency Database Schema
+-- Run this in your Supabase SQL Editor
+-- ============================================
+
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ============================================
+-- Sites Table
+-- ============================================
+CREATE TABLE sites (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  slug TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  template_id TEXT NOT NULL DEFAULT 'law-firm',
+  owner_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  settings JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
+-- Pages Table
+-- ============================================
+CREATE TABLE pages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  site_id UUID REFERENCES sites(id) ON DELETE CASCADE NOT NULL,
+  slug TEXT NOT NULL,
+  title TEXT NOT NULL,
+  content JSONB NOT NULL,
+  metadata JSONB DEFAULT '{}',
+  is_published BOOLEAN DEFAULT false,
+  version INTEGER DEFAULT 1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(site_id, slug)
+);
+
+-- ============================================
+-- Content Versions Table (for history)
+-- ============================================
+CREATE TABLE content_versions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  page_id UUID REFERENCES pages(id) ON DELETE CASCADE NOT NULL,
+  version INTEGER NOT NULL,
+  content JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL
+);
+
+-- ============================================
+-- Indexes
+-- ============================================
+CREATE INDEX idx_sites_slug ON sites(slug);
+CREATE INDEX idx_sites_owner ON sites(owner_id);
+CREATE INDEX idx_pages_site ON pages(site_id);
+CREATE INDEX idx_pages_slug ON pages(site_id, slug);
+CREATE INDEX idx_versions_page ON content_versions(page_id);
+
+-- ============================================
+-- Updated At Trigger
+-- ============================================
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER sites_updated_at
+  BEFORE UPDATE ON sites
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER pages_updated_at
+  BEFORE UPDATE ON pages
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at();
+
+-- ============================================
+-- Row Level Security
+-- ============================================
+ALTER TABLE sites ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE content_versions ENABLE ROW LEVEL SECURITY;
+
+-- Public can read published pages (for viewing sites)
+CREATE POLICY "Public can view published pages"
+  ON pages FOR SELECT
+  USING (is_published = true);
+
+-- Public can read sites (for routing)
+CREATE POLICY "Public can view sites"
+  ON sites FOR SELECT
+  USING (true);
+
+-- Owners can manage their sites
+CREATE POLICY "Owners can manage their sites"
+  ON sites FOR ALL
+  USING (auth.uid() = owner_id);
+
+-- Owners can manage pages on their sites
+CREATE POLICY "Owners can manage their pages"
+  ON pages FOR ALL
+  USING (
+    site_id IN (
+      SELECT id FROM sites WHERE owner_id = auth.uid()
+    )
+  );
+
+-- Owners can view all pages on their sites (including drafts)
+CREATE POLICY "Owners can view all their pages"
+  ON pages FOR SELECT
+  USING (
+    site_id IN (
+      SELECT id FROM sites WHERE owner_id = auth.uid()
+    )
+  );
+
+-- Owners can manage version history
+CREATE POLICY "Owners can manage versions"
+  ON content_versions FOR ALL
+  USING (
+    page_id IN (
+      SELECT p.id FROM pages p
+      JOIN sites s ON p.site_id = s.id
+      WHERE s.owner_id = auth.uid()
+    )
+  );
+
+-- ============================================
+-- Demo Data (Optional - for testing)
+-- ============================================
+-- Uncomment and run separately if you want demo data
+
+/*
+-- Insert a demo site (no owner - publicly editable for demo)
+INSERT INTO sites (slug, name, template_id, settings)
+VALUES (
+  'smith-johnson-law',
+  'Smith & Johnson Law',
+  'law-firm',
+  '{}'
+);
+
+-- Get the site ID
+DO $$
+DECLARE
+  demo_site_id UUID;
+BEGIN
+  SELECT id INTO demo_site_id FROM sites WHERE slug = 'smith-johnson-law';
+
+  -- Insert the home page with default content
+  INSERT INTO pages (site_id, slug, title, content, is_published)
+  VALUES (
+    demo_site_id,
+    'home',
+    'Home',
+    '{
+      "siteInfo": {
+        "firmName": "Smith & Johnson Law",
+        "phone": "(555) 123-4567",
+        "email": "info@smithjohnsonlaw.com",
+        "address": "123 Legal Avenue, Suite 500\nSan Francisco, CA 94102"
+      },
+      "sections": []
+    }'::jsonb,
+    true
+  );
+END $$;
+*/
