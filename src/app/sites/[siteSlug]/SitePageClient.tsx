@@ -17,6 +17,7 @@ interface SitePageClientProps {
   content: PageContent
   isOwner: boolean
   siteSlug: string
+  pageSlug?: string
 }
 
 function getSectionByType<T extends Section['type']>(
@@ -26,7 +27,7 @@ function getSectionByType<T extends Section['type']>(
   return sections.find((s): s is Extract<Section, { type: T }> => s.type === type)
 }
 
-export function SitePageClient({ content, isOwner, siteSlug }: SitePageClientProps) {
+export function SitePageClient({ content, isOwner, siteSlug, pageSlug = 'home' }: SitePageClientProps) {
   const colorScheme = content.branding?.colorScheme || 'default'
 
   return (
@@ -35,7 +36,7 @@ export function SitePageClient({ content, isOwner, siteSlug }: SitePageClientPro
         isOwner={isOwner}
         initialContent={content}
         siteSlug={siteSlug}
-        pageSlug="home"
+        pageSlug={pageSlug}
       >
         <SiteContentWrapper>
           <SiteContentInner />

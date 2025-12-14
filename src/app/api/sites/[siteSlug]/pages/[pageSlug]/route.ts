@@ -111,6 +111,68 @@ export async function PUT(
   return NextResponse.json(updatedPage)
 }
 
+export async function PATCH(
+  request: Request,
+  { params }: { params: { siteSlug: string; pageSlug: string } }
+) {
+  const supabase = await createClient()
+
+  // Check authentication
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // Get the site and verify ownership
+  const { data: site, error: siteError } = await supabase
+    .from('sites')
+    .select('id, owner_id')
+    .eq('slug', params.siteSlug)
+    .single()
+
+  if (siteError || !site) {
+    return NextResponse.json({ error: 'Site not found' }, { status: 404 })
+  }
+
+  if (site.owner_id !== user.id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  // Get update data
+  const body = await request.json()
+  const { is_published, title } = body
+
+  // Build update object
+  const updates: Record<string, unknown> = {}
+  if (typeof is_published === 'boolean') {
+    updates.is_published = is_published
+  }
+  if (typeof title === 'string' && title.trim()) {
+    updates.title = title.trim()
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: 'No valid updates provided' }, { status: 400 })
+  }
+
+  // Update the page
+  const { data: page, error: updateError } = await supabase
+    .from('pages')
+    .update(updates)
+    .eq('site_id', site.id)
+    .eq('slug', params.pageSlug)
+    .select()
+    .single()
+
+  if (updateError) {
+    console.error('Error updating page:', updateError)
+    return NextResponse.json({ error: 'Failed to update page' }, { status: 500 })
+  }
+
+  return NextResponse.json(page)
+}
+
 export async function DELETE(
   request: Request,
   { params }: { params: { siteSlug: string; pageSlug: string } }

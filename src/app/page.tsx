@@ -3,7 +3,18 @@ import Link from 'next/link'
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <div className="max-w-6xl mx-auto px-4 py-16 md:py-24">
+      {/* Navigation */}
+      <nav className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <span className="text-white font-semibold">The Anti-Agency</span>
+        <Link
+          href="/dashboard"
+          className="text-slate-400 hover:text-white transition-colors text-sm"
+        >
+          My Sites →
+        </Link>
+      </nav>
+
+      <div className="max-w-6xl mx-auto px-4 py-12 md:py-20">
         {/* Header */}
         <header className="text-center mb-16">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">

@@ -17,7 +17,7 @@ export function PagesTab() {
   const router = useRouter()
   const { showToast } = useToast()
   const siteSlug = params.siteSlug as string
-  const currentPageSlug = 'home' // Currently hardcoded, will be dynamic
+  const currentPageSlug = (params.pageSlug as string) || 'home'
 
   const [pages, setPages] = useState<Page[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -109,9 +109,32 @@ export function PagesTab() {
     }
   }
 
+  const handleTogglePublish = async (pageSlug: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/sites/${siteSlug}/pages/${pageSlug}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_published: !currentStatus }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to update page')
+      }
+
+      showToast(currentStatus ? 'Page unpublished' : 'Page published', 'success')
+      fetchPages()
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Failed to update page', 'error')
+    }
+  }
+
   const handleNavigateToPage = (pageSlug: string) => {
-    // For now, just refresh - in a full implementation, this would navigate to the page
-    router.push(`/sites/${siteSlug}?page=${pageSlug}`)
+    if (pageSlug === 'home') {
+      router.push(`/sites/${siteSlug}`)
+    } else {
+      router.push(`/sites/${siteSlug}/${pageSlug}`)
+    }
   }
 
   if (isLoading) {
@@ -221,11 +244,22 @@ export function PagesTab() {
                 )}
               </div>
               <div className="flex items-center gap-1">
-                {!page.is_published && (
-                  <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">
-                    Draft
-                  </span>
-                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleTogglePublish(page.slug, page.is_published)
+                  }}
+                  className={`
+                    text-xs px-2 py-0.5 rounded transition-colors
+                    ${page.is_published
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                      : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                    }
+                  `}
+                  title={page.is_published ? 'Click to unpublish' : 'Click to publish'}
+                >
+                  {page.is_published ? 'Published' : 'Draft'}
+                </button>
                 {page.slug !== 'home' && (
                   <button
                     onClick={(e) => {
