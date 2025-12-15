@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server'
 import { getGroqClient, DEFAULT_MODEL } from '@/lib/ai/client'
 import { SYSTEM_PROMPTS, type PromptType } from '@/lib/ai/prompts'
+import { checkRateLimit, rateLimitResponse, getClientIdentifier } from '@/lib/rate-limit'
 
 export async function POST(request: Request) {
+  // Rate limiting
+  const identifier = getClientIdentifier(request)
+  const { allowed, resetIn } = checkRateLimit('ai', identifier)
+
+  if (!allowed) {
+    return rateLimitResponse(resetIn)
+  }
+
   try {
     const body = await request.json()
     const {
