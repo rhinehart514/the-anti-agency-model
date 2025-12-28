@@ -28,6 +28,13 @@ Thumbs.db
 
 # Playwright
 .playwright-mcp/
+test-results/
+playwright-report/
+
+# Testing
+coverage/
+quality-reports/
+lighthouse-results/
 
 # Claude
 .claude/

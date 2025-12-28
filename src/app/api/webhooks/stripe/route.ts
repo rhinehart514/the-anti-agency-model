@@ -301,8 +301,8 @@ async function handleSubscriptionUpdated(
       stripe_subscription_id: subscription.id,
       plan,
       status: status === 'active' ? 'active' : status === 'trialing' ? 'trialing' : 'past_due',
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      current_period_start: new Date(subscription.items.data[0].current_period_start * 1000).toISOString(),
+      current_period_end: new Date(subscription.items.data[0].current_period_end * 1000).toISOString(),
       updated_at: new Date().toISOString(),
     })
     .eq('organization_id', orgId);
@@ -331,9 +331,9 @@ async function handleSubscriptionCancelled(
 }
 
 async function handleInvoicePaid(supabase: any, invoice: Stripe.Invoice) {
-  const subscriptionId = invoice.subscription as string;
+  const subscriptionId = invoice.parent?.subscription_details?.subscription;
 
-  if (!subscriptionId) return;
+  if (!subscriptionId || typeof subscriptionId !== 'string') return;
 
   // Update billing record to confirm payment
   await supabase
@@ -348,9 +348,9 @@ async function handleInvoicePaid(supabase: any, invoice: Stripe.Invoice) {
 }
 
 async function handleInvoiceFailed(supabase: any, invoice: Stripe.Invoice) {
-  const subscriptionId = invoice.subscription as string;
+  const subscriptionId = invoice.parent?.subscription_details?.subscription;
 
-  if (!subscriptionId) return;
+  if (!subscriptionId || typeof subscriptionId !== 'string') return;
 
   await supabase
     .from('organization_billing')

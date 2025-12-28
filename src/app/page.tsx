@@ -21,7 +21,7 @@ export default function Home() {
             className="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg shadow-blue-600/25"
           >
             Create Your Site
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </Link>
@@ -33,7 +33,7 @@ export default function Home() {
         {/* Features */}
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
-            <div className="text-3xl mb-4">🤖</div>
+            <div className="text-3xl mb-4" role="img" aria-label="Robot icon">🤖</div>
             <h3 className="text-lg font-semibold text-white mb-2">
               Your AI Agent
             </h3>
@@ -42,7 +42,7 @@ export default function Home() {
             </p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
-            <div className="text-3xl mb-4">⚡</div>
+            <div className="text-3xl mb-4" role="img" aria-label="Lightning bolt icon">⚡</div>
             <h3 className="text-lg font-semibold text-white mb-2">
               Built in Minutes
             </h3>
@@ -51,7 +51,7 @@ export default function Home() {
             </p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
-            <div className="text-3xl mb-4">✏️</div>
+            <div className="text-3xl mb-4" role="img" aria-label="Pencil icon">✏️</div>
             <h3 className="text-lg font-semibold text-white mb-2">
               Easy to Edit
             </h3>

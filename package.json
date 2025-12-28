@@ -6,7 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:a11y": "playwright test e2e/accessibility.spec.ts",
+    "test:e2e:perf": "playwright test e2e/performance.spec.ts",
+    "analyze": "ANALYZE=true next build",
+    "type-coverage": "type-coverage --detail --strict",
+    "quality": "npx ts-node scripts/quality-metrics.ts",
+    "test:all": "npm run test:run && npm run test:e2e"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -23,6 +36,7 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@stripe/react-stripe-js": "^5.4.1",
     "@stripe/stripe-js": "^8.6.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.87.1",
@@ -54,6 +68,21 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6"
+    "@axe-core/playwright": "^4.11.0",
+    "@next/bundle-analyzer": "^16.1.1",
+    "@playwright/test": "^1.57.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/bcryptjs": "^2.4.6",
+    "@vitejs/plugin-react": "^5.1.2",
+    "@vitest/coverage-v8": "^4.0.16",
+    "jsdom": "^27.4.0",
+    "lighthouse": "^12.8.2",
+    "ts-node": "^10.9.2",
+    "type-coverage": "^2.29.7",
+    "typescript-coverage-report": "^1.1.1",
+    "vitest": "^4.0.16"
   }
 }
