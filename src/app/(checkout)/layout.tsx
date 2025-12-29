@@ -1,7 +1,4 @@
-import { Inter } from 'next/font/google';
 import '@/app/globals.css';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
   title: 'Checkout',
@@ -15,7 +12,7 @@ export default function CheckoutLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className="font-sans antialiased">
         <main className="min-h-screen bg-gray-50">
           {children}
         </main>
