@@ -200,9 +200,33 @@ export default function CheckoutPage() {
                     </span>
                   </div>
                 ))}
-                <div className="border-t pt-3 flex justify-between font-bold">
-                  <span>Total Paid</span>
-                  <span>${order.total.toFixed(2)}</span>
+                <div className="border-t pt-3 space-y-2">
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Subtotal</span>
+                    <span>${order.subtotal.toFixed(2)}</span>
+                  </div>
+                  {order.discount_amount > 0 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>Discount</span>
+                      <span>-${order.discount_amount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {order.shipping_cost > 0 && (
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>Shipping</span>
+                      <span>${order.shipping_cost.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {order.tax_amount > 0 && (
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>Tax</span>
+                      <span>${order.tax_amount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-bold pt-2 border-t">
+                    <span>Total Paid</span>
+                    <span>${order.total.toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
             </div>

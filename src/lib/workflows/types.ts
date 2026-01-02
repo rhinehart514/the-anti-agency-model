@@ -40,7 +40,6 @@ export const WebhookTriggerConfigSchema = z.object({
 // Action Types
 export const ActionTypeEnum = z.enum([
   'send_email',
-  'send_sms',
   'send_webhook',
   'create_record',
   'update_record',

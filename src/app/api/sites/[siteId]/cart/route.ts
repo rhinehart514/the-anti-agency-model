@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { nanoid } from 'nanoid';
+import { loggers } from '@/lib/logger';
 
 const CART_COOKIE_NAME = 'cart_id';
 const CART_EXPIRY_DAYS = 30;
@@ -81,7 +82,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Cart error:', error);
+    loggers.api.error({ error }, 'Cart error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -157,7 +158,7 @@ export async function POST(
         .single();
 
       if (cartError) {
-        console.error('Error creating cart:', cartError);
+        loggers.api.error({ error: cartError }, 'Error creating cart');
         return NextResponse.json(
           { error: 'Failed to create cart' },
           { status: 500 }
@@ -193,7 +194,7 @@ export async function POST(
         .eq('id', existingItem.id);
 
       if (updateError) {
-        console.error('Error updating cart item:', updateError);
+        loggers.api.error({ error: updateError }, 'Error updating cart item');
         return NextResponse.json(
           { error: 'Failed to update cart' },
           { status: 500 }
@@ -211,7 +212,7 @@ export async function POST(
         });
 
       if (insertError) {
-        console.error('Error adding cart item:', insertError);
+        loggers.api.error({ error: insertError }, 'Error adding cart item');
         return NextResponse.json(
           { error: 'Failed to add item to cart' },
           { status: 500 }
@@ -252,7 +253,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error('Add to cart error:', error);
+    loggers.api.error({ error }, 'Add to cart error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }
@@ -343,7 +344,7 @@ export async function PATCH(
       },
     });
   } catch (error) {
-    console.error('Update cart error:', error);
+    loggers.api.error({ error }, 'Update cart error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }
@@ -385,7 +386,7 @@ export async function DELETE(
       },
     });
   } catch (error) {
-    console.error('Clear cart error:', error);
+    loggers.api.error({ error }, 'Clear cart error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

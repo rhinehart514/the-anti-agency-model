@@ -3,16 +3,64 @@ import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { nanoid } from 'nanoid';
 import { createPaymentIntent, getOrCreateCustomer } from '@/lib/stripe/client';
+import { withRateLimit, rateLimiters } from '@/lib/rate-limit';
+import { calculateOrderTax } from '@/lib/taxjar/calculate';
+import { z } from 'zod';
+import { loggers } from '@/lib/logger';
 
 const CART_COOKIE_NAME = 'cart_id';
+
+// Zod schemas for checkout validation
+const AddressSchema = z.object({
+  firstName: z.string().min(1, 'First name is required').max(100),
+  lastName: z.string().min(1, 'Last name is required').max(100),
+  address1: z.string().min(1, 'Address is required').max(200),
+  address2: z.string().max(200).optional(),
+  city: z.string().min(1, 'City is required').max(100),
+  state: z.string().min(1, 'State is required').max(100),
+  postalCode: z.string().min(1, 'Postal code is required').max(20),
+  country: z.string().min(2, 'Country is required').max(100),
+  phone: z.string().max(30).optional(),
+});
+
+const CheckoutRequestSchema = z.object({
+  email: z.string().email('Invalid email address').max(255),
+  shippingAddress: AddressSchema,
+  billingAddress: AddressSchema.optional(),
+  useSameAddress: z.boolean().default(true),
+  shippingMethodId: z.string().uuid().optional(),
+  paymentMethodId: z.string().optional(),
+  siteUserId: z.string().uuid().optional(),
+  discountCode: z.string().max(50).optional(),
+});
 
 // POST /api/sites/[siteId]/checkout - Create checkout session
 export async function POST(
   request: NextRequest,
   { params }: { params: { siteId: string } }
 ) {
+  // Rate limit: 10 checkout attempts per minute
+  const rateLimit = withRateLimit(request, rateLimiters.checkout);
+  if (!rateLimit.allowed) {
+    return rateLimit.response;
+  }
+
   try {
     const body = await request.json();
+
+    // Validate request body with Zod
+    const parseResult = CheckoutRequestSchema.safeParse(body);
+    if (!parseResult.success) {
+      const errors = parseResult.error.errors.map((e) => ({
+        field: e.path.join('.'),
+        message: e.message,
+      }));
+      return NextResponse.json(
+        { error: 'Validation failed', errors },
+        { status: 400 }
+      );
+    }
+
     const {
       email,
       shippingAddress,
@@ -22,14 +70,7 @@ export async function POST(
       paymentMethodId,
       siteUserId,
       discountCode,
-    } = body;
-
-    if (!email || !shippingAddress) {
-      return NextResponse.json(
-        { error: 'Email and shipping address are required' },
-        { status: 400 }
-      );
-    }
+    } = parseResult.data;
 
     const cookieStore = await cookies();
     const cartId = cookieStore.get(`${CART_COOKIE_NAME}_${params.siteId}`)?.value;
@@ -164,10 +205,25 @@ export async function POST(
       }
     }
 
-    // Calculate tax (simplified - should integrate with tax service)
-    const taxRate = 0; // TODO: Calculate based on shipping address
-    const taxAmount = (subtotal - discountAmount) * taxRate;
+    // Calculate tax using TaxJar
+    const taxResult = await calculateOrderTax({
+      toAddress: {
+        address1: shippingAddress.address1,
+        city: shippingAddress.city,
+        state: shippingAddress.state,
+        postalCode: shippingAddress.postalCode,
+        country: shippingAddress.country,
+      },
+      items: orderItems.map((item) => ({
+        id: item.product_id || 'unknown',
+        quantity: item.quantity,
+        unitPrice: item.unit_price,
+      })),
+      shippingCost,
+      discountAmount,
+    });
 
+    const taxAmount = taxResult.taxAmount;
     const total = subtotal + shippingCost + taxAmount - discountAmount;
 
     // Get or create customer
@@ -226,7 +282,7 @@ export async function POST(
       .single();
 
     if (orderError) {
-      console.error('Error creating order:', orderError);
+      loggers.commerce.error({ siteId: params.siteId, error: orderError }, 'Error creating order');
       return NextResponse.json(
         { error: 'Failed to create order' },
         { status: 500 }
@@ -289,7 +345,7 @@ export async function POST(
           })
           .eq('id', order.id);
       } catch (stripeError) {
-        console.error('Stripe error:', stripeError);
+        loggers.commerce.error({ siteId: params.siteId, orderId: order.id, error: stripeError }, 'Stripe payment intent creation failed');
         // Continue without Stripe - order is created but payment will fail
       }
     }
@@ -309,7 +365,7 @@ export async function POST(
       checkoutUrl: `/checkout/${order.id}/payment`,
     });
   } catch (error) {
-    console.error('Checkout error:', error);
+    loggers.commerce.error({ siteId: params.siteId, error }, 'Checkout error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }

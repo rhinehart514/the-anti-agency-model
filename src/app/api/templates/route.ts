@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireSiteOwnership, sanitizeSearchParam } from '@/lib/api-security';
+import { loggers } from '@/lib/logger';
 
-// GET /api/templates - List public templates
+// GET /api/templates - List public templates (no auth required - public browsing)
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -28,7 +30,8 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+      const safeSearch = sanitizeSearchParam(search);
+      query = query.or(`name.ilike.%${safeSearch}%,description.ilike.%${safeSearch}%`);
     }
 
     // Sorting
@@ -43,7 +46,7 @@ export async function GET(request: NextRequest) {
     const { data: templates, count, error } = await query;
 
     if (error) {
-      console.error('Error fetching templates:', error);
+      loggers.template.error({ error }, 'Error fetching templates');
       return NextResponse.json(
         { error: 'Failed to fetch templates' },
         { status: 500 }
@@ -70,7 +73,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Templates error:', error);
+    loggers.template.error({ error }, 'Templates error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -81,6 +84,8 @@ export async function GET(request: NextRequest) {
 // POST /api/templates - Create a new template from a site
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+
     const body = await request.json();
     const {
       siteId,
@@ -100,7 +105,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
+    // Require site ownership to create template from site
+    await requireSiteOwnership(supabase, siteId);
 
     // Get the site to clone
     const { data: site, error: siteError } = await supabase
@@ -154,7 +160,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (templateError) {
-      console.error('Error creating template:', templateError);
+      loggers.template.error({ error: templateError }, 'Error creating template');
       return NextResponse.json(
         { error: 'Failed to create template' },
         { status: 500 }
@@ -163,7 +169,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ template }, { status: 201 });
   } catch (error) {
-    console.error('Create template error:', error);
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (error instanceof Error && error.message.includes('permission')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    loggers.template.error({ error }, 'Create template error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }

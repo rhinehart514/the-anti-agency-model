@@ -1,5 +1,71 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
+import { sanitizeSearchParam } from '@/lib/api-security';
+import { loggers } from '@/lib/logger';
+
+// Helper to verify site ownership
+async function verifySiteOwnership(
+  supabase: any,
+  siteId: string
+): Promise<{ authorized: boolean; userId?: string }> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { authorized: false };
+  }
+
+  const { data: site } = await supabase
+    .from('sites')
+    .select('user_id')
+    .eq('id', siteId)
+    .single();
+
+  if (!site || site.user_id !== user.id) {
+    return { authorized: false };
+  }
+
+  return { authorized: true, userId: user.id };
+}
+
+// Zod schema for product creation
+const ProductCreateSchema = z.object({
+  name: z.string().min(1).max(255),
+  slug: z.string().min(1).max(255),
+  description: z.string().optional(),
+  shortDescription: z.string().max(500).optional(),
+  images: z.array(z.string().url()).optional(),
+  price: z.number().min(0),
+  compareAtPrice: z.number().min(0).optional(),
+  costPrice: z.number().min(0).optional(),
+  sku: z.string().max(100).optional(),
+  barcode: z.string().max(100).optional(),
+  trackInventory: z.boolean().optional(),
+  quantity: z.number().int().min(0).optional(),
+  allowBackorder: z.boolean().optional(),
+  weight: z.number().min(0).optional(),
+  weightUnit: z.enum(['lb', 'kg', 'oz', 'g']).optional(),
+  requiresShipping: z.boolean().optional(),
+  isDigital: z.boolean().optional(),
+  digitalFileUrl: z.string().url().optional(),
+  status: z.enum(['draft', 'active', 'archived']).optional(),
+  metadata: z.record(z.any()).optional(),
+  seoTitle: z.string().max(100).optional(),
+  seoDescription: z.string().max(300).optional(),
+  variants: z.array(z.object({
+    name: z.string(),
+    sku: z.string().optional(),
+    price: z.number().min(0),
+    compareAtPrice: z.number().min(0).optional(),
+    quantity: z.number().int().min(0).optional(),
+    options: z.record(z.string()).optional(),
+    imageUrl: z.string().url().optional(),
+    weight: z.number().min(0).optional(),
+  })).optional(),
+  categoryIds: z.array(z.string().uuid()).optional(),
+});
 
 // GET /api/sites/[siteId]/products - List all products
 export async function GET(
@@ -8,6 +74,13 @@ export async function GET(
 ) {
   try {
     const supabase = await createClient();
+
+    // Verify authentication and site ownership
+    const { authorized } = await verifySiteOwnership(supabase, params.siteId);
+    if (!authorized) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
 
     const limit = parseInt(searchParams.get('limit') || '50');
@@ -35,13 +108,14 @@ export async function GET(
     }
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+      const safeSearch = sanitizeSearchParam(search);
+      query = query.or(`name.ilike.%${safeSearch}%,description.ilike.%${safeSearch}%`);
     }
 
     const { data: products, count, error } = await query;
 
     if (error) {
-      console.error('Error fetching products:', error);
+      loggers.api.error({ error }, 'Error fetching products');
       return NextResponse.json(
         { error: 'Failed to fetch products' },
         { status: 500 }
@@ -58,7 +132,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Products error:', error);
+    loggers.api.error({ error }, 'Products error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -72,7 +146,26 @@ export async function POST(
   { params }: { params: { siteId: string } }
 ) {
   try {
+    const supabase = await createClient();
+
+    // Verify authentication and site ownership
+    const { authorized } = await verifySiteOwnership(supabase, params.siteId);
+    if (!authorized) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
+
+    // Validate with Zod
+    const parseResult = ProductCreateSchema.safeParse(body);
+    if (!parseResult.success) {
+      const errors = parseResult.error.errors.map((e) => ({
+        field: e.path.join('.'),
+        message: e.message,
+      }));
+      return NextResponse.json({ error: 'Validation failed', errors }, { status: 400 });
+    }
+
     const {
       name,
       slug,
@@ -98,16 +191,7 @@ export async function POST(
       seoDescription,
       variants,
       categoryIds,
-    } = body;
-
-    if (!name || !slug || price === undefined) {
-      return NextResponse.json(
-        { error: 'Name, slug, and price are required' },
-        { status: 400 }
-      );
-    }
-
-    const supabase = await createClient();
+    } = parseResult.data;
 
     // Create product
     const { data: product, error: productError } = await supabase
@@ -141,7 +225,7 @@ export async function POST(
       .single();
 
     if (productError) {
-      console.error('Error creating product:', productError);
+      loggers.api.error({ error: productError }, 'Error creating product');
       return NextResponse.json(
         { error: 'Failed to create product' },
         { status: 500 }
@@ -191,7 +275,7 @@ export async function POST(
 
     return NextResponse.json({ product: completeProduct }, { status: 201 });
   } catch (error) {
-    console.error('Create product error:', error);
+    loggers.api.error({ error }, 'Create product error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }

@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { sendWorkflowEmail } from '@/lib/email/send';
+import { enqueueDelayedStep, MAX_INLINE_DELAY_MS } from '@/lib/queue/workflow-queue';
+import { loggers } from '@/lib/logger';
 
 export type TriggerType =
   | 'form_submit'
@@ -16,7 +18,6 @@ export type TriggerType =
 
 export type ActionType =
   | 'send_email'
-  | 'send_sms'
   | 'send_webhook'
   | 'create_record'
   | 'update_record'
@@ -81,23 +82,6 @@ const actionHandlers: Record<ActionType, (config: any, context: WorkflowContext)
         success: allSucceeded,
         output: { sent: allSucceeded, recipients: results, subject: interpolatedSubject },
         error: allSucceeded ? undefined : 'Some emails failed to send',
-      };
-    } catch (error: any) {
-      return { success: false, error: error.message };
-    }
-  },
-
-  send_sms: async (config, context) => {
-    try {
-      const { to, message } = config;
-      const interpolatedMessage = interpolateVariables(message, context.variables);
-
-      // TODO: Integrate with SMS service (Twilio, etc.)
-      console.log('Sending SMS:', { to, message: interpolatedMessage });
-
-      return {
-        success: true,
-        output: { sent: true, to, message: interpolatedMessage },
       };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -315,7 +299,7 @@ const actionHandlers: Record<ActionType, (config: any, context: WorkflowContext)
 
   delay: async (config, context) => {
     try {
-      const { duration, unit } = config;
+      const { duration, unit, nextStepId, nextStepConfig } = config;
 
       const multipliers: Record<string, number> = {
         seconds: 1000,
@@ -326,14 +310,45 @@ const actionHandlers: Record<ActionType, (config: any, context: WorkflowContext)
 
       const ms = duration * (multipliers[unit] || 1000);
 
-      // For short delays, wait directly
-      if (ms <= 30000) {
+      // For short delays, wait directly (within serverless timeout)
+      if (ms <= MAX_INLINE_DELAY_MS) {
         await new Promise(resolve => setTimeout(resolve, ms));
-        return { success: true, output: { waited: ms } };
+        return { success: true, output: { waited: ms, inline: true } };
       }
 
-      // For longer delays, schedule resumption
-      // TODO: Store execution state and resume later via cron/queue
+      // For longer delays, enqueue to Bull queue if available
+      if (nextStepId && nextStepConfig) {
+        const job = await enqueueDelayedStep({
+          siteId: context.siteId,
+          workflowId: context.variables.workflowId || '',
+          executionId: context.executionId,
+          stepId: nextStepId,
+          stepConfig: nextStepConfig,
+          context: context.variables,
+          delayMs: ms,
+        });
+
+        if (job) {
+          loggers.workflow.info(
+            { executionId: context.executionId, delayMs: ms, jobId: job.id },
+            'Long delay enqueued to job queue'
+          );
+          return {
+            success: true,
+            output: {
+              queued: true,
+              jobId: job.id,
+              resumeAt: new Date(Date.now() + ms).toISOString(),
+            },
+          };
+        }
+      }
+
+      // Fallback: log warning that delay cannot be persisted
+      loggers.workflow.warn(
+        { executionId: context.executionId, delayMs: ms },
+        'Long delay requested but Redis not available or no next step configured'
+      );
       return {
         success: true,
         output: { scheduled: true, resumeAt: new Date(Date.now() + ms).toISOString() },

@@ -2,12 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendFormNotification } from '@/lib/email/send';
 import { triggerWorkflows } from '@/lib/workflows/executor';
+import { withRateLimit, rateLimiters } from '@/lib/rate-limit';
+import { loggers } from '@/lib/logger';
 
 // POST /api/sites/[siteId]/forms/[formId]/submit - Submit a form
 export async function POST(
   request: NextRequest,
   { params }: { params: { siteId: string; formId: string } }
 ) {
+  // Rate limit: 10 form submissions per minute
+  const rateLimit = withRateLimit(request, rateLimiters.forms);
+  if (!rateLimit.allowed) {
+    return rateLimit.response;
+  }
+
   try {
     const body = await request.json();
     const { data, siteUserId, metadata } = body;
@@ -93,7 +101,7 @@ export async function POST(
       .single();
 
     if (submissionError) {
-      console.error('Error creating submission:', submissionError);
+      loggers.api.error({ error: submissionError }, 'Error creating submission');
       return NextResponse.json(
         { error: 'Failed to submit form' },
         { status: 500 }
@@ -107,7 +115,7 @@ export async function POST(
       submissionId: submission.id,
       submissionData: cleanedData,
       siteUserId,
-    }).catch((err) => console.error('Workflow trigger error:', err));
+    }).catch((err) => loggers.api.error({ error: err }, 'Workflow trigger error'));
 
     // Send notification emails if configured
     if (form.settings?.notifyEmails?.length > 0) {
@@ -116,7 +124,7 @@ export async function POST(
         submissionData: cleanedData,
         submittedAt: new Date().toISOString(),
         siteName: form.site_id, // Would ideally fetch site name
-      }).catch((err) => console.error('Email notification error:', err));
+      }).catch((err) => loggers.api.error({ error: err }, 'Email notification error'));
     }
 
     // Save to collection if configured
@@ -129,7 +137,7 @@ export async function POST(
           created_by: siteUserId || 'form_submission',
         })
         .then(({ error }) => {
-          if (error) console.error('Collection save error:', error);
+          if (error) loggers.api.error({ error }, 'Collection save error');
         });
     }
 
@@ -140,7 +148,7 @@ export async function POST(
       redirectUrl: form.settings?.redirectUrl,
     });
   } catch (error) {
-    console.error('Form submission error:', error);
+    loggers.api.error({ error }, 'Form submission error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }

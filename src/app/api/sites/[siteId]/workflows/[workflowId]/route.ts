@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { executeWorkflow } from '@/lib/workflows/executor';
+import { loggers } from '@/lib/logger';
 
 // GET /api/sites/[siteId]/workflows/[workflowId] - Get workflow details
 export async function GET(
@@ -46,7 +47,7 @@ export async function GET(
 
     return NextResponse.json({ workflow });
   } catch (error) {
-    console.error('Workflow error:', error);
+    loggers.api.error({ error }, 'Workflow error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -89,7 +90,7 @@ export async function PUT(
       .single();
 
     if (workflowError) {
-      console.error('Error updating workflow:', workflowError);
+      loggers.api.error({ error: workflowError }, 'Error updating workflow');
       return NextResponse.json(
         { error: 'Failed to update workflow' },
         { status: 500 }
@@ -130,7 +131,7 @@ export async function PUT(
 
     return NextResponse.json({ workflow: completeWorkflow });
   } catch (error) {
-    console.error('Update workflow error:', error);
+    loggers.api.error({ error }, 'Update workflow error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }
@@ -153,7 +154,7 @@ export async function DELETE(
       .eq('site_id', params.siteId);
 
     if (error) {
-      console.error('Error deleting workflow:', error);
+      loggers.api.error({ error }, 'Error deleting workflow');
       return NextResponse.json(
         { error: 'Failed to delete workflow' },
         { status: 500 }
@@ -162,7 +163,7 @@ export async function DELETE(
 
     return NextResponse.json({ deleted: true });
   } catch (error) {
-    console.error('Delete workflow error:', error);
+    loggers.api.error({ error }, 'Delete workflow error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -187,7 +188,7 @@ export async function POST(
       message: result.success ? 'Workflow executed successfully' : 'Workflow execution failed',
     });
   } catch (error: any) {
-    console.error('Execute workflow error:', error);
+    loggers.api.error({ error }, 'Execute workflow error');
     return NextResponse.json(
       { error: error.message || 'Failed to execute workflow' },
       { status: 500 }

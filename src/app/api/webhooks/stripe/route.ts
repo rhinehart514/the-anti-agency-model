@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe, constructWebhookEvent } from '@/lib/stripe/client';
 import { createClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
-import { sendOrderConfirmation } from '@/lib/email/send';
+import { sendOrderConfirmation, sendPaymentFailedEmail } from '@/lib/email/send';
+import { loggers } from '@/lib/logger';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
   try {
     event = constructWebhookEvent(body, signature, webhookSecret);
   } catch (err: any) {
-    console.error('Webhook signature verification failed:', err.message);
+    loggers.stripe.error({ error: err.message }, 'Webhook signature verification failed');
     return NextResponse.json(
       { error: 'Invalid signature' },
       { status: 400 }
@@ -87,12 +88,12 @@ export async function POST(request: NextRequest) {
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        loggers.stripe.debug({ eventType: event.type }, 'Unhandled event type');
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Webhook handler error:', error);
+    loggers.stripe.error({ error }, 'Webhook handler error');
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -109,7 +110,7 @@ async function handlePaymentSucceeded(
   const orderId = paymentIntent.metadata?.order_id;
 
   if (!orderId) {
-    console.log('No order_id in payment intent metadata');
+    loggers.stripe.warn({ paymentIntentId: paymentIntent.id }, 'No order_id in payment intent metadata');
     return;
   }
 
@@ -174,10 +175,10 @@ async function handlePaymentSucceeded(
         postalCode: fullOrder.shipping_address?.postalCode,
         country: fullOrder.shipping_address?.country,
       },
-    }).catch((err) => console.error('Order confirmation email error:', err));
+    }).catch((err) => loggers.stripe.error({ error: err, orderId }, 'Order confirmation email error'));
   }
 
-  console.log(`Payment succeeded for order ${orderId}`);
+  loggers.stripe.info({ orderId, paymentIntentId: paymentIntent.id }, 'Payment succeeded');
 }
 
 async function handlePaymentFailed(
@@ -187,6 +188,13 @@ async function handlePaymentFailed(
   const orderId = paymentIntent.metadata?.order_id;
 
   if (!orderId) return;
+
+  // Get order details for the email
+  const { data: order } = await supabase
+    .from('orders')
+    .select('email, order_number, shipping_address, total')
+    .eq('id', orderId)
+    .single();
 
   await supabase
     .from('orders')
@@ -209,7 +217,24 @@ async function handlePaymentFailed(
     },
   });
 
-  console.log(`Payment failed for order ${orderId}`);
+  // Send payment failed email
+  if (order?.email) {
+    try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      await sendPaymentFailedEmail(order.email, {
+        customerName: order.shipping_address?.firstName || 'Customer',
+        orderNumber: order.order_number,
+        amount: order.total,
+        currency: paymentIntent.currency?.toUpperCase() || 'USD',
+        reason: paymentIntent.last_payment_error?.message || 'Payment was declined',
+        retryUrl: `${appUrl}/checkout/${orderId}/payment`,
+      });
+    } catch (emailError) {
+      loggers.stripe.error({ error: emailError, orderId }, 'Failed to send payment failed email');
+    }
+  }
+
+  loggers.stripe.warn({ orderId, paymentIntentId: paymentIntent.id, reason: paymentIntent.last_payment_error?.message }, 'Payment failed');
 }
 
 async function handleChargeRefunded(supabase: any, charge: Stripe.Charge) {
@@ -249,7 +274,7 @@ async function handleChargeRefunded(supabase: any, charge: Stripe.Charge) {
     })
     .eq('id', payment.order_id);
 
-  console.log(`Refund processed for order ${payment.order_id}`);
+  loggers.stripe.info({ orderId: payment.order_id, refundedAmount, isFullRefund }, 'Refund processed');
 }
 
 async function handleCheckoutCompleted(
@@ -271,7 +296,7 @@ async function handleCheckoutCompleted(
       .eq('id', orderId);
   }
 
-  console.log(`Checkout completed for order ${orderId}`);
+  loggers.stripe.info({ orderId, sessionId: session.id, paymentStatus: session.payment_status }, 'Checkout completed');
 }
 
 async function handleSubscriptionUpdated(
@@ -307,7 +332,7 @@ async function handleSubscriptionUpdated(
     })
     .eq('organization_id', orgId);
 
-  console.log(`Subscription updated for org ${orgId}: ${plan} (${status})`);
+  loggers.stripe.info({ organizationId: orgId, plan, status, subscriptionId: subscription.id }, 'Subscription updated');
 }
 
 async function handleSubscriptionCancelled(
@@ -327,7 +352,7 @@ async function handleSubscriptionCancelled(
     })
     .eq('organization_id', orgId);
 
-  console.log(`Subscription cancelled for org ${orgId}`);
+  loggers.stripe.info({ organizationId: orgId, subscriptionId: subscription.id }, 'Subscription cancelled');
 }
 
 async function handleInvoicePaid(supabase: any, invoice: Stripe.Invoice) {
@@ -344,7 +369,7 @@ async function handleInvoicePaid(supabase: any, invoice: Stripe.Invoice) {
     })
     .eq('stripe_subscription_id', subscriptionId);
 
-  console.log(`Invoice paid for subscription ${subscriptionId}`);
+  loggers.stripe.info({ subscriptionId, invoiceId: invoice.id }, 'Invoice paid');
 }
 
 async function handleInvoiceFailed(supabase: any, invoice: Stripe.Invoice) {
@@ -360,6 +385,21 @@ async function handleInvoiceFailed(supabase: any, invoice: Stripe.Invoice) {
     })
     .eq('stripe_subscription_id', subscriptionId);
 
-  // TODO: Send payment failed email
-  console.log(`Invoice failed for subscription ${subscriptionId}`);
+  // Send payment failed email
+  try {
+    const customer = await stripe.customers.retrieve(invoice.customer as string);
+    if (customer && !customer.deleted && customer.email) {
+      await sendPaymentFailedEmail(customer.email, {
+        customerName: customer.name || 'Customer',
+        amount: invoice.amount_due / 100,
+        currency: invoice.currency.toUpperCase(),
+        reason: 'Payment could not be processed',
+      });
+      loggers.stripe.info({ email: customer.email, invoiceId: invoice.id }, 'Payment failed email sent');
+    }
+  } catch (emailError) {
+    loggers.stripe.error({ error: emailError, invoiceId: invoice.id }, 'Failed to send payment failed email');
+  }
+
+  loggers.stripe.warn({ subscriptionId, invoiceId: invoice.id }, 'Invoice payment failed');
 }

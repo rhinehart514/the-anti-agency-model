@@ -377,6 +377,101 @@ export function workflowEmail(data: WorkflowEmailData): string {
   return emailWrapper(content, { siteName, primaryColor: data.primaryColor });
 }
 
+// Invitation email
+export interface InvitationEmailData extends EmailTemplateData {
+  inviteeName?: string;
+  inviterName?: string;
+  inviteUrl: string;
+  expiresIn?: string;
+  roleName?: string;
+}
+
+export function invitationEmail(data: InvitationEmailData): string {
+  const {
+    inviteeName,
+    inviterName,
+    inviteUrl,
+    expiresIn = '7 days',
+    roleName,
+    siteName = 'Our Platform',
+  } = data;
+
+  const greeting = inviteeName ? `Hi ${inviteeName},` : 'Hello,';
+  const inviterText = inviterName ? `${inviterName} has invited you` : "You've been invited";
+
+  const content = `
+    <div class="header">
+      <h1>You're Invited!</h1>
+    </div>
+
+    <p>${greeting}</p>
+    <p>${inviterText} to join <strong>${siteName}</strong>${roleName ? ` as a <strong>${roleName}</strong>` : ''}.</p>
+
+    <p style="text-align: center;">
+      <a href="${inviteUrl}" class="button">Accept Invitation</a>
+    </p>
+
+    <p style="color: #64748b; font-size: 14px;">
+      This invitation will expire in ${expiresIn}. If you didn't expect this invitation, you can safely ignore this email.
+    </p>
+  `;
+
+  return emailWrapper(content, { siteName, primaryColor: data.primaryColor });
+}
+
+// Payment failed notification
+export interface PaymentFailedData extends EmailTemplateData {
+  customerName: string;
+  orderNumber?: string;
+  amount: number;
+  currency?: string;
+  retryUrl?: string;
+  reason?: string;
+}
+
+export function paymentFailedEmail(data: PaymentFailedData): string {
+  const {
+    customerName,
+    orderNumber,
+    amount,
+    currency = 'USD',
+    retryUrl,
+    reason,
+    siteName = 'Our Store',
+  } = data;
+
+  const formattedAmount = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+  }).format(amount);
+
+  const content = `
+    <div class="header">
+      <h1>Payment Failed</h1>
+    </div>
+
+    <p>Hi ${customerName},</p>
+    <p>We were unable to process your payment${orderNumber ? ` for order <strong>#${orderNumber}</strong>` : ''}.</p>
+
+    <div class="info-box">
+      <strong>Amount:</strong> ${formattedAmount}<br>
+      ${reason ? `<strong>Reason:</strong> ${reason}` : ''}
+    </div>
+
+    <p>This could be due to insufficient funds, an expired card, or a temporary bank issue.</p>
+
+    ${retryUrl ? `
+    <p style="text-align: center;">
+      <a href="${retryUrl}" class="button">Update Payment Method</a>
+    </p>
+    ` : ''}
+
+    <p>If you continue to experience issues, please contact your bank or our support team.</p>
+  `;
+
+  return emailWrapper(content, { siteName, primaryColor: data.primaryColor });
+}
+
 // Shipping notification email
 export interface ShippingNotificationData extends EmailTemplateData {
   orderNumber: string;

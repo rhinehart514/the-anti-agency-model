@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { nanoid } from 'nanoid';
+import { requireSiteOwnership } from '@/lib/api-security';
+import { loggers } from '@/lib/logger';
 
 // GET /api/sites/[siteId]/orders - List all orders
 export async function GET(
@@ -9,6 +11,10 @@ export async function GET(
 ) {
   try {
     const supabase = await createClient();
+
+    // Require site ownership
+    await requireSiteOwnership(supabase, params.siteId);
+
     const { searchParams } = new URL(request.url);
 
     const limit = parseInt(searchParams.get('limit') || '50');
@@ -46,7 +52,7 @@ export async function GET(
     const { data: orders, count, error } = await query;
 
     if (error) {
-      console.error('Error fetching orders:', error);
+      loggers.commerce.error({ error }, 'Error fetching orders');
       return NextResponse.json(
         { error: 'Failed to fetch orders' },
         { status: 500 }
@@ -63,7 +69,13 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Orders error:', error);
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (error instanceof Error && error.message.includes('permission')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    loggers.commerce.error({ error }, 'Orders error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -77,6 +89,11 @@ export async function POST(
   { params }: { params: { siteId: string } }
 ) {
   try {
+    const supabase = await createClient();
+
+    // Require site ownership
+    await requireSiteOwnership(supabase, params.siteId);
+
     const body = await request.json();
     const {
       customerId,
@@ -98,8 +115,6 @@ export async function POST(
         { status: 400 }
       );
     }
-
-    const supabase = await createClient();
 
     // Generate order number
     const orderNumber = `ORD-${nanoid(10).toUpperCase()}`;
@@ -167,7 +182,7 @@ export async function POST(
       .single();
 
     if (orderError) {
-      console.error('Error creating order:', orderError);
+      loggers.commerce.error({ error: orderError }, 'Error creating order');
       return NextResponse.json(
         { error: 'Failed to create order' },
         { status: 500 }
@@ -185,7 +200,7 @@ export async function POST(
       .insert(itemsToInsert);
 
     if (itemsError) {
-      console.error('Error creating order items:', itemsError);
+      loggers.commerce.error({ error: itemsError }, 'Error creating order items');
     }
 
     // Fetch complete order
@@ -204,7 +219,13 @@ export async function POST(
 
     return NextResponse.json({ order: completeOrder }, { status: 201 });
   } catch (error) {
-    console.error('Create order error:', error);
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (error instanceof Error && error.message.includes('permission')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    loggers.commerce.error({ error }, 'Create order error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }

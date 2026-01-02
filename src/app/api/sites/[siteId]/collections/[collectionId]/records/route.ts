@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { loggers } from '@/lib/logger';
 
 // GET /api/sites/[siteId]/collections/[collectionId]/records
 export async function GET(
@@ -49,7 +50,7 @@ export async function GET(
     const { data: records, count, error } = await query;
 
     if (error) {
-      console.error('Error fetching records:', error);
+      loggers.api.error({ error }, 'Error fetching records');
       return NextResponse.json(
         { error: 'Failed to fetch records' },
         { status: 500 }
@@ -66,7 +67,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Records error:', error);
+    loggers.api.error({ error }, 'Records error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -119,7 +120,7 @@ export async function POST(
       .single();
 
     if (error) {
-      console.error('Error creating record:', error);
+      loggers.api.error({ error }, 'Error creating record');
       return NextResponse.json(
         { error: 'Failed to create record' },
         { status: 500 }
@@ -128,7 +129,7 @@ export async function POST(
 
     return NextResponse.json({ record }, { status: 201 });
   } catch (error) {
-    console.error('Create record error:', error);
+    loggers.api.error({ error }, 'Create record error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }
@@ -182,7 +183,7 @@ export async function PATCH(
       records: successful.map((r) => r.data),
     });
   } catch (error) {
-    console.error('Bulk update error:', error);
+    loggers.api.error({ error }, 'Bulk update error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }
@@ -215,7 +216,7 @@ export async function DELETE(
       .eq('collection_id', params.collectionId);
 
     if (error) {
-      console.error('Error deleting records:', error);
+      loggers.api.error({ error }, 'Error deleting records');
       return NextResponse.json(
         { error: 'Failed to delete records' },
         { status: 500 }
@@ -224,7 +225,7 @@ export async function DELETE(
 
     return NextResponse.json({ deleted: recordIds.length });
   } catch (error) {
-    console.error('Delete records error:', error);
+    loggers.api.error({ error }, 'Delete records error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }

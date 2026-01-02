@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { SignupCredentialsSchema } from '@/lib/site-auth/types';
+import { withRateLimit, rateLimiters } from '@/lib/rate-limit';
+import { loggers } from '@/lib/logger';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 
@@ -8,6 +10,12 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { siteId: string } }
 ) {
+  // Rate limit: 5 attempts per minute
+  const rateLimit = withRateLimit(request, rateLimiters.auth);
+  if (!rateLimit.allowed) {
+    return rateLimit.response;
+  }
+
   try {
     const body = await request.json();
     const credentials = SignupCredentialsSchema.parse(body);
@@ -60,7 +68,7 @@ export async function POST(
       .single();
 
     if (userError) {
-      console.error('Error creating user:', userError);
+      loggers.api.error({ error: userError }, 'Error creating user');
       return NextResponse.json(
         { error: 'Failed to create user' },
         { status: 500 }
@@ -103,7 +111,7 @@ export async function POST(
       .single();
 
     if (sessionError) {
-      console.error('Error creating session:', sessionError);
+      loggers.api.error({ error: sessionError }, 'Error creating session');
       return NextResponse.json(
         { error: 'Failed to create session' },
         { status: 500 }
@@ -127,7 +135,7 @@ export async function POST(
       roles: defaultRole ? [defaultRole] : [],
     });
   } catch (error) {
-    console.error('Signup error:', error);
+    loggers.api.error({ error }, 'Signup error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }

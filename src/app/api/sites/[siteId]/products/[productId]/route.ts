@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { loggers } from '@/lib/logger';
 
 // GET /api/sites/[siteId]/products/[productId] - Get a single product
 export async function GET(
@@ -32,7 +33,7 @@ export async function GET(
 
     return NextResponse.json({ product });
   } catch (error) {
-    console.error('Product error:', error);
+    loggers.api.error({ error }, 'Product error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -110,7 +111,7 @@ export async function PUT(
       .single();
 
     if (productError) {
-      console.error('Error updating product:', productError);
+      loggers.api.error({ error: productError }, 'Error updating product');
       return NextResponse.json(
         { error: 'Failed to update product' },
         { status: 500 }
@@ -178,7 +179,7 @@ export async function PUT(
 
     return NextResponse.json({ product: completeProduct });
   } catch (error) {
-    console.error('Update product error:', error);
+    loggers.api.error({ error }, 'Update product error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }
@@ -201,7 +202,7 @@ export async function DELETE(
       .eq('site_id', params.siteId);
 
     if (error) {
-      console.error('Error deleting product:', error);
+      loggers.api.error({ error }, 'Error deleting product');
       return NextResponse.json(
         { error: 'Failed to delete product' },
         { status: 500 }
@@ -210,7 +211,7 @@ export async function DELETE(
 
     return NextResponse.json({ deleted: true });
   } catch (error) {
-    console.error('Delete product error:', error);
+    loggers.api.error({ error }, 'Delete product error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

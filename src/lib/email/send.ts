@@ -6,12 +6,16 @@ import {
   passwordResetEmail,
   workflowEmail,
   shippingNotificationEmail,
+  invitationEmail,
+  paymentFailedEmail,
   OrderConfirmationData,
   FormSubmissionData,
   WelcomeEmailData,
   PasswordResetData,
   WorkflowEmailData,
   ShippingNotificationData,
+  InvitationEmailData,
+  PaymentFailedData,
 } from './templates';
 
 // Send order confirmation
@@ -97,6 +101,37 @@ export async function sendShippingNotification(
     tags: [
       { name: 'type', value: 'shipping_notification' },
       { name: 'order_number', value: data.orderNumber },
+    ],
+  });
+}
+
+// Send invitation email
+export async function sendInvitationEmail(
+  to: string,
+  data: InvitationEmailData
+) {
+  const html = invitationEmail(data);
+  return sendEmail({
+    to,
+    subject: `You're invited to join ${data.siteName || 'our platform'}`,
+    html,
+    tags: [{ name: 'type', value: 'invitation' }],
+  });
+}
+
+// Send payment failed notification
+export async function sendPaymentFailedEmail(
+  to: string,
+  data: PaymentFailedData
+) {
+  const html = paymentFailedEmail(data);
+  return sendEmail({
+    to,
+    subject: `Payment failed${data.orderNumber ? ` for order #${data.orderNumber}` : ''}`,
+    html,
+    tags: [
+      { name: 'type', value: 'payment_failed' },
+      ...(data.orderNumber ? [{ name: 'order_number', value: data.orderNumber }] : []),
     ],
   });
 }

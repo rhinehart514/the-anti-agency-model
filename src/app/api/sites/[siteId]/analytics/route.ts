@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAnalyticsStats, getDailyPageViews } from '@/lib/analytics/server';
+import { loggers } from '@/lib/logger';
 
 // GET /api/sites/[siteId]/analytics - Get analytics stats
 export async function GET(
@@ -47,7 +48,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Analytics error:', error);
+    loggers.api.error({ error }, 'Analytics error');
     return NextResponse.json(
       { error: 'Failed to fetch analytics' },
       { status: 500 }

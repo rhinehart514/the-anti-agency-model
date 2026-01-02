@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { loggers } from '@/lib/logger';
 import { nanoid } from 'nanoid';
 
 // POST /api/templates/[templateId]/install - Install template to a site
@@ -108,7 +109,7 @@ export async function POST(
             .single();
 
           if (pageError) {
-            console.error('Error creating page:', pageError);
+            loggers.api.error({ error: pageError }, 'Error creating page');
           } else if (page) {
             createdResources.push({ type: 'page', id: page.id });
           }
@@ -135,7 +136,7 @@ export async function POST(
           .single();
 
         if (themeError) {
-          console.error('Error creating theme:', themeError);
+          loggers.api.error({ error: themeError }, 'Error creating theme');
         } else if (theme) {
           createdResources.push({ type: 'theme', id: theme.id });
         }
@@ -172,7 +173,7 @@ export async function POST(
       });
     } catch (installError: any) {
       // Rollback created resources on error
-      console.error('Install error, rolling back:', installError);
+      loggers.api.error({ error: installError }, 'Install error, rolling back');
 
       for (const resource of createdResources) {
         try {
@@ -182,7 +183,7 @@ export async function POST(
             await supabase.from('site_theme').delete().eq('id', resource.id);
           }
         } catch (rollbackError) {
-          console.error('Rollback error:', rollbackError);
+          loggers.api.error({ error: rollbackError }, 'Rollback error');
         }
       }
 
@@ -192,7 +193,7 @@ export async function POST(
       );
     }
   } catch (error) {
-    console.error('Install template error:', error);
+    loggers.api.error({ error }, 'Install template error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }

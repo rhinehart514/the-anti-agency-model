@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { loggers } from '@/lib/logger';
 
 // GET /api/templates/[templateId] - Get template details
 export async function GET(
@@ -30,7 +31,7 @@ export async function GET(
 
     return NextResponse.json({ template });
   } catch (error) {
-    console.error('Template error:', error);
+    loggers.api.error({ error }, 'Template error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -69,7 +70,7 @@ export async function PATCH(
       .single();
 
     if (error) {
-      console.error('Error updating template:', error);
+      loggers.api.error({ error }, 'Error updating template');
       return NextResponse.json(
         { error: 'Failed to update template' },
         { status: 500 }
@@ -78,7 +79,7 @@ export async function PATCH(
 
     return NextResponse.json({ template });
   } catch (error) {
-    console.error('Update template error:', error);
+    loggers.api.error({ error }, 'Update template error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }
@@ -100,7 +101,7 @@ export async function DELETE(
       .eq('id', params.templateId);
 
     if (error) {
-      console.error('Error deleting template:', error);
+      loggers.api.error({ error }, 'Error deleting template');
       return NextResponse.json(
         { error: 'Failed to delete template' },
         { status: 500 }
@@ -109,7 +110,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Delete template error:', error);
+    loggers.api.error({ error }, 'Delete template error');
     return NextResponse.json(
       { error: 'Failed to delete template' },
       { status: 500 }

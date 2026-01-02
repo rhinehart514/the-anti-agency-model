@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { loggers } from '@/lib/logger';
 
 // GET /api/sites/[siteId]/forms - List all forms
 export async function GET(
@@ -20,7 +21,7 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching forms:', error);
+      loggers.api.error({ error }, 'Error fetching forms');
       return NextResponse.json(
         { error: 'Failed to fetch forms' },
         { status: 500 }
@@ -36,7 +37,7 @@ export async function GET(
 
     return NextResponse.json({ forms: formsWithStats });
   } catch (error) {
-    console.error('Forms error:', error);
+    loggers.api.error({ error }, 'Forms error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -80,7 +81,7 @@ export async function POST(
       .single();
 
     if (formError) {
-      console.error('Error creating form:', formError);
+      loggers.api.error({ error: formError }, 'Error creating form');
       return NextResponse.json(
         { error: 'Failed to create form' },
         { status: 500 }
@@ -108,7 +109,7 @@ export async function POST(
         .insert(fieldsToInsert);
 
       if (fieldsError) {
-        console.error('Error creating fields:', fieldsError);
+        loggers.api.error({ error: fieldsError }, 'Error creating fields');
       }
     }
 
@@ -124,7 +125,7 @@ export async function POST(
 
     return NextResponse.json({ form: completeForm }, { status: 201 });
   } catch (error) {
-    console.error('Create form error:', error);
+    loggers.api.error({ error }, 'Create form error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }

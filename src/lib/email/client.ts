@@ -1,7 +1,8 @@
 import { Resend } from 'resend';
+import { loggers } from '@/lib/logger';
 
 if (!process.env.RESEND_API_KEY) {
-  console.warn('RESEND_API_KEY is not set - email functionality will be disabled');
+  loggers.email.warn('RESEND_API_KEY is not set - email functionality will be disabled');
 }
 
 export const resend = process.env.RESEND_API_KEY
@@ -22,7 +23,7 @@ export interface SendEmailParams {
 
 export async function sendEmail(params: SendEmailParams): Promise<{ success: boolean; id?: string; error?: string }> {
   if (!resend) {
-    console.warn('Email not sent - Resend is not configured');
+    loggers.email.warn({ to: params.to, subject: params.subject }, 'Email not sent - Resend is not configured');
     return { success: false, error: 'Email service not configured' };
   }
 
@@ -38,13 +39,14 @@ export async function sendEmail(params: SendEmailParams): Promise<{ success: boo
     });
 
     if (error) {
-      console.error('Failed to send email:', error);
+      loggers.email.error({ to: params.to, subject: params.subject, error }, 'Failed to send email');
       return { success: false, error: error.message };
     }
 
+    loggers.email.info({ to: params.to, subject: params.subject, id: data?.id }, 'Email sent');
     return { success: true, id: data?.id };
   } catch (error: any) {
-    console.error('Email error:', error);
+    loggers.email.error({ to: params.to, subject: params.subject, error }, 'Email error');
     return { success: false, error: error.message };
   }
 }
@@ -54,7 +56,7 @@ export async function sendBatchEmails(
   emails: SendEmailParams[]
 ): Promise<{ success: boolean; results: Array<{ success: boolean; id?: string; error?: string }> }> {
   if (!resend) {
-    console.warn('Emails not sent - Resend is not configured');
+    loggers.email.warn({ count: emails.length }, 'Batch emails not sent - Resend is not configured');
     return { success: false, results: emails.map(() => ({ success: false, error: 'Email service not configured' })) };
   }
 

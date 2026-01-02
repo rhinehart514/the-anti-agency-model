@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { loggers } from '@/lib/logger';
 
 async function verifyMembership(
   supabase: any,
@@ -82,7 +83,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Organization error:', error);
+    loggers.api.error({ error }, 'Organization error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -140,7 +141,7 @@ export async function PATCH(
       .single();
 
     if (error) {
-      console.error('Error updating organization:', error);
+      loggers.api.error({ error }, 'Error updating organization');
       return NextResponse.json(
         { error: 'Failed to update organization' },
         { status: 500 }
@@ -149,7 +150,7 @@ export async function PATCH(
 
     return NextResponse.json({ organization });
   } catch (error) {
-    console.error('Update organization error:', error);
+    loggers.api.error({ error }, 'Update organization error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }
@@ -209,7 +210,7 @@ export async function DELETE(
       .eq('id', params.orgId);
 
     if (error) {
-      console.error('Error deleting organization:', error);
+      loggers.api.error({ error }, 'Error deleting organization');
       return NextResponse.json(
         { error: 'Failed to delete organization' },
         { status: 500 }
@@ -218,7 +219,7 @@ export async function DELETE(
 
     return NextResponse.json({ deleted: true });
   } catch (error) {
-    console.error('Delete organization error:', error);
+    loggers.api.error({ error }, 'Delete organization error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

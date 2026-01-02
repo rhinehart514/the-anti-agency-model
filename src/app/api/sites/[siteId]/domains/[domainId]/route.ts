@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { loggers } from '@/lib/logger';
 import dns from 'dns';
 import { promisify } from 'util';
 
@@ -28,7 +29,7 @@ export async function GET(
 
     return NextResponse.json({ domain });
   } catch (error) {
-    console.error('Domain error:', error);
+    loggers.api.error({ error }, 'Domain error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -93,7 +94,7 @@ export async function POST(
         : 'Verification failed. Please check your DNS settings.',
     });
   } catch (error) {
-    console.error('Verify domain error:', error);
+    loggers.api.error({ error }, 'Verify domain error');
     return NextResponse.json(
       { error: 'Verification failed' },
       { status: 500 }
@@ -146,7 +147,7 @@ export async function PATCH(
 
     return NextResponse.json({ domain: updatedDomain });
   } catch (error) {
-    console.error('Update domain error:', error);
+    loggers.api.error({ error }, 'Update domain error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }
@@ -181,7 +182,7 @@ export async function DELETE(
       .eq('id', params.domainId);
 
     if (error) {
-      console.error('Error deleting domain:', error);
+      loggers.api.error({ error }, 'Error deleting domain');
       return NextResponse.json(
         { error: 'Failed to delete domain' },
         { status: 500 }
@@ -208,7 +209,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Delete domain error:', error);
+    loggers.api.error({ error }, 'Delete domain error');
     return NextResponse.json(
       { error: 'Failed to delete domain' },
       { status: 500 }

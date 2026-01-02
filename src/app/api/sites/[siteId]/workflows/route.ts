@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { loggers } from '@/lib/logger';
 
 // GET /api/sites/[siteId]/workflows - List all workflows
 export async function GET(
@@ -19,7 +20,7 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching workflows:', error);
+      loggers.api.error({ error }, 'Error fetching workflows');
       return NextResponse.json(
         { error: 'Failed to fetch workflows' },
         { status: 500 }
@@ -28,7 +29,7 @@ export async function GET(
 
     return NextResponse.json({ workflows });
   } catch (error) {
-    console.error('Workflows error:', error);
+    loggers.api.error({ error }, 'Workflows error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -76,7 +77,7 @@ export async function POST(
       .single();
 
     if (workflowError) {
-      console.error('Error creating workflow:', workflowError);
+      loggers.api.error({ error: workflowError }, 'Error creating workflow');
       return NextResponse.json(
         { error: 'Failed to create workflow' },
         { status: 500 }
@@ -98,7 +99,7 @@ export async function POST(
         .insert(stepsToInsert);
 
       if (stepsError) {
-        console.error('Error creating steps:', stepsError);
+        loggers.api.error({ error: stepsError }, 'Error creating steps');
       }
     }
 
@@ -114,7 +115,7 @@ export async function POST(
 
     return NextResponse.json({ workflow: completeWorkflow }, { status: 201 });
   } catch (error) {
-    console.error('Create workflow error:', error);
+    loggers.api.error({ error }, 'Create workflow error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }

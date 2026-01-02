@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { loggers } from '@/lib/logger';
 
 // GET /api/organizations - List user's organizations
 export async function GET(request: NextRequest) {
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
       .eq('user_id', user.id);
 
     if (error) {
-      console.error('Error fetching organizations:', error);
+      loggers.api.error({ error }, 'Error fetching organizations');
       return NextResponse.json(
         { error: 'Failed to fetch organizations' },
         { status: 500 }
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ organizations });
   } catch (error) {
-    console.error('Organizations error:', error);
+    loggers.api.error({ error }, 'Organizations error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (orgError) {
-      console.error('Error creating organization:', orgError);
+      loggers.api.error({ error: orgError }, 'Error creating organization');
       return NextResponse.json(
         { error: 'Failed to create organization' },
         { status: 500 }
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ organization }, { status: 201 });
   } catch (error) {
-    console.error('Create organization error:', error);
+    loggers.api.error({ error }, 'Create organization error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }

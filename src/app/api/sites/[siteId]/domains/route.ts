@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { nanoid } from 'nanoid';
 import dns from 'dns';
 import { promisify } from 'util';
+import { requireSiteOwnership } from '@/lib/api-security';
+import { loggers } from '@/lib/logger';
 
 const resolveTxt = promisify(dns.resolveTxt);
 const resolveCname = promisify(dns.resolveCname);
@@ -15,6 +17,9 @@ export async function GET(
   try {
     const supabase = await createClient();
 
+    // Require site ownership
+    await requireSiteOwnership(supabase, params.siteId);
+
     const { data: domains, error } = await supabase
       .from('site_domains')
       .select('*')
@@ -23,7 +28,7 @@ export async function GET(
       .order('created_at', { ascending: true });
 
     if (error) {
-      console.error('Error fetching domains:', error);
+      loggers.domain.error({ error }, 'Error fetching domains');
       return NextResponse.json(
         { error: 'Failed to fetch domains' },
         { status: 500 }
@@ -32,7 +37,13 @@ export async function GET(
 
     return NextResponse.json({ domains });
   } catch (error) {
-    console.error('Domains error:', error);
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (error instanceof Error && error.message.includes('permission')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    loggers.domain.error({ error }, 'Domains error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -46,6 +57,11 @@ export async function POST(
   { params }: { params: { siteId: string } }
 ) {
   try {
+    const supabase = await createClient();
+
+    // Require site ownership
+    await requireSiteOwnership(supabase, params.siteId);
+
     const body = await request.json();
     const { domain } = body;
 
@@ -71,8 +87,6 @@ export async function POST(
         { status: 400 }
       );
     }
-
-    const supabase = await createClient();
 
     // Check if domain is already in use
     const { data: existing } = await supabase
@@ -120,7 +134,7 @@ export async function POST(
       .single();
 
     if (error) {
-      console.error('Error adding domain:', error);
+      loggers.domain.error({ error }, 'Error adding domain');
       return NextResponse.json(
         { error: 'Failed to add domain' },
         { status: 500 }
@@ -135,7 +149,13 @@ export async function POST(
       { status: 201 }
     );
   } catch (error) {
-    console.error('Add domain error:', error);
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (error instanceof Error && error.message.includes('permission')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    loggers.domain.error({ error }, 'Add domain error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }
@@ -175,6 +195,11 @@ export async function PATCH(
   { params }: { params: { siteId: string } }
 ) {
   try {
+    const supabase = await createClient();
+
+    // Require site ownership
+    await requireSiteOwnership(supabase, params.siteId);
+
     const body = await request.json();
     const { primaryDomainId } = body;
 
@@ -184,8 +209,6 @@ export async function PATCH(
         { status: 400 }
       );
     }
-
-    const supabase = await createClient();
 
     // Verify domain belongs to site
     const { data: domain } = await supabase
@@ -216,7 +239,7 @@ export async function PATCH(
       .eq('id', primaryDomainId);
 
     if (error) {
-      console.error('Error updating domain:', error);
+      loggers.domain.error({ error }, 'Error updating domain');
       return NextResponse.json(
         { error: 'Failed to update domain' },
         { status: 500 }
@@ -225,7 +248,13 @@ export async function PATCH(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Update domains error:', error);
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (error instanceof Error && error.message.includes('permission')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    loggers.domain.error({ error }, 'Update domains error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }

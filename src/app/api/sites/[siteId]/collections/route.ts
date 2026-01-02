@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireSiteOwnership } from '@/lib/api-security';
+import { loggers } from '@/lib/logger';
 
 // GET /api/sites/[siteId]/collections - List all collections
 export async function GET(
@@ -8,6 +10,9 @@ export async function GET(
 ) {
   try {
     const supabase = await createClient();
+
+    // Require site ownership
+    await requireSiteOwnership(supabase, params.siteId);
 
     const { data: collections, error } = await supabase
       .from('data_collections')
@@ -19,7 +24,7 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching collections:', error);
+      loggers.api.error({ error }, 'Error fetching collections');
       return NextResponse.json(
         { error: 'Failed to fetch collections' },
         { status: 500 }
@@ -28,7 +33,13 @@ export async function GET(
 
     return NextResponse.json({ collections });
   } catch (error) {
-    console.error('Collections error:', error);
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (error instanceof Error && error.message.includes('permission')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    loggers.api.error({ error }, 'Collections error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -42,6 +53,11 @@ export async function POST(
   { params }: { params: { siteId: string } }
 ) {
   try {
+    const supabase = await createClient();
+
+    // Require site ownership
+    await requireSiteOwnership(supabase, params.siteId);
+
     const body = await request.json();
     const { name, slug, description, icon, color, fields } = body;
 
@@ -51,8 +67,6 @@ export async function POST(
         { status: 400 }
       );
     }
-
-    const supabase = await createClient();
 
     // Create collection
     const { data: collection, error: collectionError } = await supabase
@@ -69,7 +83,7 @@ export async function POST(
       .single();
 
     if (collectionError) {
-      console.error('Error creating collection:', collectionError);
+      loggers.api.error({ error: collectionError }, 'Error creating collection');
       return NextResponse.json(
         { error: 'Failed to create collection' },
         { status: 500 }
@@ -96,7 +110,7 @@ export async function POST(
         .insert(fieldsToInsert);
 
       if (fieldsError) {
-        console.error('Error creating fields:', fieldsError);
+        loggers.api.error({ error: fieldsError }, 'Error creating fields');
         // Collection was created, but fields failed - continue
       }
     }
@@ -113,7 +127,13 @@ export async function POST(
 
     return NextResponse.json({ collection: completeCollection }, { status: 201 });
   } catch (error) {
-    console.error('Create collection error:', error);
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (error instanceof Error && error.message.includes('permission')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    loggers.api.error({ error }, 'Create collection error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }

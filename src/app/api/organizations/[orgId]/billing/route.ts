@@ -7,6 +7,7 @@ import {
   cancelSubscription,
   getSubscription
 } from '@/lib/stripe/client';
+import { loggers } from '@/lib/logger';
 
 // Pricing configuration
 const PRICE_IDS: Record<string, string | undefined> = {
@@ -31,7 +32,7 @@ export async function GET(
       .single();
 
     if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching billing:', error);
+      loggers.api.error({ error }, 'Error fetching billing');
       return NextResponse.json(
         { error: 'Failed to fetch billing information' },
         { status: 500 }
@@ -57,7 +58,7 @@ export async function GET(
       try {
         subscription = await getSubscription(billing.stripe_subscription_id);
       } catch (e) {
-        console.error('Error fetching Stripe subscription:', e);
+        loggers.api.error({ error: e }, 'Error fetching Stripe subscription');
       }
     }
 
@@ -68,7 +69,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Billing error:', error);
+    loggers.api.error({ error }, 'Billing error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -171,7 +172,7 @@ export async function POST(
       sessionId: session.id,
     });
   } catch (error) {
-    console.error('Subscription error:', error);
+    loggers.api.error({ error }, 'Subscription error');
     return NextResponse.json(
       { error: 'Failed to create subscription' },
       { status: 500 }
@@ -307,7 +308,7 @@ export async function PATCH(
       { status: 400 }
     );
   } catch (error) {
-    console.error('Billing update error:', error);
+    loggers.api.error({ error }, 'Billing update error');
     return NextResponse.json(
       { error: 'Failed to update subscription' },
       { status: 500 }

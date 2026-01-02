@@ -211,3 +211,114 @@ BEGIN
   );
 END $$;
 */
+
+-- ============================================
+-- Tasks Table (for workflow create_task action)
+-- ============================================
+CREATE TABLE tasks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  site_id UUID REFERENCES sites(id) ON DELETE CASCADE NOT NULL,
+  assigned_to UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'cancelled')),
+  priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+  due_date TIMESTAMPTZ,
+  created_by TEXT NOT NULL,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_tasks_site ON tasks(site_id);
+CREATE INDEX idx_tasks_assigned ON tasks(assigned_to);
+CREATE INDEX idx_tasks_status ON tasks(status);
+CREATE INDEX idx_tasks_due ON tasks(due_date);
+
+CREATE TRIGGER tasks_updated_at
+  BEFORE UPDATE ON tasks
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at();
+
+-- ============================================
+-- Notifications Table (for workflow send_notification action)
+-- ============================================
+CREATE TABLE notifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  site_id UUID REFERENCES sites(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  message TEXT,
+  type TEXT DEFAULT 'info' CHECK (type IN ('info', 'success', 'warning', 'error')),
+  is_read BOOLEAN DEFAULT false,
+  read_at TIMESTAMPTZ,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_notifications_site ON notifications(site_id);
+CREATE INDEX idx_notifications_user ON notifications(user_id);
+CREATE INDEX idx_notifications_unread ON notifications(user_id, is_read) WHERE is_read = false;
+
+-- ============================================
+-- Site Imports Table (for URL import tracking)
+-- ============================================
+CREATE TABLE site_imports (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  site_id UUID REFERENCES sites(id) ON DELETE CASCADE NOT NULL,
+  source_url TEXT NOT NULL,
+  source_platform TEXT,
+  scraped_data JSONB DEFAULT '{}',
+  diagnosis_result JSONB DEFAULT '{}',
+  import_status TEXT DEFAULT 'pending' CHECK (import_status IN ('pending', 'scraping', 'diagnosing', 'generating', 'completed', 'failed')),
+  error_message TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  completed_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_site_imports_site ON site_imports(site_id);
+CREATE INDEX idx_site_imports_status ON site_imports(import_status);
+CREATE INDEX idx_site_imports_created ON site_imports(created_at DESC);
+
+-- RLS for site_imports
+ALTER TABLE site_imports ENABLE ROW LEVEL SECURITY;
+
+-- Owners can manage their site imports
+CREATE POLICY "Owners can manage their site imports"
+  ON site_imports FOR ALL
+  USING (
+    site_id IN (
+      SELECT id FROM sites WHERE owner_id = auth.uid()
+    )
+  );
+
+-- ============================================
+-- Google Connections Table (for Google Business Profile import)
+-- ============================================
+CREATE TABLE google_connections (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  google_account_id TEXT,
+  google_email TEXT,
+  access_token TEXT,
+  refresh_token TEXT,
+  token_expires_at TIMESTAMPTZ,
+  scopes TEXT[] DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX idx_google_connections_user ON google_connections(user_id);
+
+CREATE TRIGGER google_connections_updated_at
+  BEFORE UPDATE ON google_connections
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at();
+
+-- RLS for google_connections
+ALTER TABLE google_connections ENABLE ROW LEVEL SECURITY;
+
+-- Users can manage their own Google connections
+CREATE POLICY "Users can manage their Google connections"
+  ON google_connections FOR ALL
+  USING (auth.uid() = user_id);

@@ -54,3 +54,87 @@
 [debug] [2025-12-27T02:13:38.551Z] > authorizing via signed-in user (hiveconnects@gmail.com)
 [debug] [2025-12-27T02:13:38.551Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
 [debug] [2025-12-27T02:13:38.551Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2025-12-31T02:38:15.448Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-31T02:38:15.450Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2025-12-31T02:38:15.451Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-31T02:38:15.451Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2025-12-31T02:38:15.474Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-31T02:38:15.474Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2025-12-31T02:38:15.769Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-31T02:38:15.769Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2025-12-31T02:38:15.770Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-31T02:38:15.770Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2025-12-31T02:38:15.772Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-31T02:38:15.773Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2025-12-31T02:38:15.774Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-31T02:38:15.774Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2025-12-31T04:36:26.665Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-31T04:36:26.672Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2025-12-31T04:36:26.673Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-31T04:36:26.673Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2025-12-31T04:36:26.890Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-31T04:36:26.891Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2025-12-31T04:36:27.630Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-31T04:36:27.631Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2025-12-31T04:36:27.637Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-31T04:36:27.637Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2025-12-31T04:36:27.641Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-31T04:36:27.641Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2025-12-31T04:36:27.645Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-31T04:36:27.645Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-01T18:18:27.080Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T18:18:27.083Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-01T18:18:27.083Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T18:18:27.084Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-01T18:18:27.126Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T18:18:27.126Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-01T18:18:27.411Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T18:18:27.411Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-01T18:18:27.412Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T18:18:27.413Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-01T18:18:27.414Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T18:18:27.414Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-01T18:18:27.415Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T18:18:27.415Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-01T19:05:41.894Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:05:41.895Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-01T19:05:41.896Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:05:41.896Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-01T19:05:41.906Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:05:41.906Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-01T19:05:42.057Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:05:42.057Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-01T19:05:42.058Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:05:42.058Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-01T19:05:42.059Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:05:42.059Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-01T19:05:42.059Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-01T19:05:42.059Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-02T01:46:12.794Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-02T01:46:12.797Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-02T01:46:12.797Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-02T01:46:12.797Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-02T01:46:12.818Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-02T01:46:12.818Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-02T01:46:13.269Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-02T01:46:13.270Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-02T01:46:13.270Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-02T01:46:13.271Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-02T01:46:13.274Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-02T01:46:13.274Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-02T01:46:13.274Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-02T01:46:13.274Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-02T03:58:52.275Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-02T03:58:52.277Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-02T03:58:52.277Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-02T03:58:52.277Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-02T03:58:52.299Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-02T03:58:52.299Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-02T03:58:52.554Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-02T03:58:52.556Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-02T03:58:52.558Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-02T03:58:52.558Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-02T03:58:52.560Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-02T03:58:52.560Z] > authorizing via signed-in user (hiveconnects@gmail.com)
+[debug] [2026-01-02T03:58:52.561Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-02T03:58:52.561Z] > authorizing via signed-in user (hiveconnects@gmail.com)

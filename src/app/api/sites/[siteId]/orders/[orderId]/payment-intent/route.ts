@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { stripe } from '@/lib/stripe/client';
+import { loggers } from '@/lib/logger';
 
 // GET /api/sites/[siteId]/orders/[orderId]/payment-intent - Get payment intent client secret
 export async function GET(
@@ -65,7 +66,7 @@ export async function GET(
       status: paymentIntent.status,
     });
   } catch (error) {
-    console.error('Payment intent error:', error);
+    loggers.api.error({ error }, 'Payment intent error');
     return NextResponse.json(
       { error: 'Failed to retrieve payment details' },
       { status: 500 }

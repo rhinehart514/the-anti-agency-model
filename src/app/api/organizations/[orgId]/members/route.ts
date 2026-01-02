@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { sendInvitationEmail } from '@/lib/email/send';
+import { randomBytes } from 'crypto';
+import { loggers } from '@/lib/logger';
 
 async function verifyMembership(
   supabase: any,
@@ -52,7 +55,7 @@ export async function GET(
       .order('created_at', { ascending: true });
 
     if (error) {
-      console.error('Error fetching members:', error);
+      loggers.api.error({ error }, 'Error fetching members');
       return NextResponse.json(
         { error: 'Failed to fetch members' },
         { status: 500 }
@@ -61,7 +64,7 @@ export async function GET(
 
     return NextResponse.json({ members });
   } catch (error) {
-    console.error('Members error:', error);
+    loggers.api.error({ error }, 'Members error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -166,19 +169,51 @@ export async function POST(
           { status: 400 }
         );
       }
-      console.error('Error creating invitation:', inviteError);
+      loggers.api.error({ error: inviteError }, 'Error creating invitation');
       return NextResponse.json(
         { error: 'Failed to send invitation' },
         { status: 500 }
       );
     }
 
-    // TODO: Send invitation email
-    // await sendInvitationEmail(email, invitation.token, organization.name);
+    // Get organization name for the email
+    const { data: org } = await supabase
+      .from('organizations')
+      .select('name')
+      .eq('id', params.orgId)
+      .single();
+
+    // Generate invitation token
+    const inviteToken = randomBytes(32).toString('hex');
+
+    // Update invitation with token
+    await supabase
+      .from('organization_invitations')
+      .update({
+        token: inviteToken,
+      })
+      .eq('id', invitation.id);
+
+    // Build invite URL
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const inviteUrl = `${appUrl}/organizations/${params.orgId}/accept-invite?token=${inviteToken}`;
+
+    // Send the invitation email
+    try {
+      await sendInvitationEmail(email.toLowerCase(), {
+        siteName: org?.name || 'Our Organization',
+        inviteUrl,
+        roleName: role,
+        expiresIn: '7 days',
+      });
+    } catch (emailError) {
+      loggers.api.error({ error: emailError }, 'Failed to send invitation email');
+      // Continue - invitation was created, email just failed
+    }
 
     return NextResponse.json({ invitation }, { status: 201 });
   } catch (error) {
-    console.error('Invite member error:', error);
+    loggers.api.error({ error }, 'Invite member error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }
@@ -272,7 +307,7 @@ export async function PATCH(
       .single();
 
     if (error) {
-      console.error('Error updating member:', error);
+      loggers.api.error({ error }, 'Error updating member');
       return NextResponse.json(
         { error: 'Failed to update member' },
         { status: 500 }
@@ -281,7 +316,7 @@ export async function PATCH(
 
     return NextResponse.json({ member: updatedMember });
   } catch (error) {
-    console.error('Update member error:', error);
+    loggers.api.error({ error }, 'Update member error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }
@@ -377,7 +412,7 @@ export async function DELETE(
       .eq('id', memberId);
 
     if (error) {
-      console.error('Error removing member:', error);
+      loggers.api.error({ error }, 'Error removing member');
       return NextResponse.json(
         { error: 'Failed to remove member' },
         { status: 500 }
@@ -386,7 +421,7 @@ export async function DELETE(
 
     return NextResponse.json({ removed: true });
   } catch (error) {
-    console.error('Remove member error:', error);
+    loggers.api.error({ error }, 'Remove member error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }

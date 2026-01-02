@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { PageContentSchema } from '@/lib/content/types'
+import { loggers } from '@/lib/logger'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
       .single()
 
     if (siteError) {
-      console.error('Error creating site:', siteError)
+      loggers.api.error({ error: siteError }, 'Error creating site')
       return NextResponse.json(
         { error: 'Failed to create site' },
         { status: 500 }
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
       })
 
     if (pageError) {
-      console.error('Error creating page:', pageError)
+      loggers.api.error({ error: pageError }, 'Error creating page')
       // Clean up the site if page creation fails
       await supabase.from('sites').delete().eq('id', site.id)
       return NextResponse.json(
@@ -105,7 +106,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(site, { status: 201 })
   } catch (error) {
-    console.error('Error in POST /api/sites:', error)
+    loggers.api.error({ error }, 'Error in POST /api/sites')
     return NextResponse.json(
       { error: 'An unexpected error occurred' },
       { status: 500 }
@@ -134,7 +135,7 @@ export async function GET() {
     .order('created_at', { ascending: false })
 
   if (error) {
-    console.error('Error fetching sites:', error)
+    loggers.api.error({ error }, 'Error fetching sites')
     return NextResponse.json(
       { error: 'Failed to fetch sites' },
       { status: 500 }

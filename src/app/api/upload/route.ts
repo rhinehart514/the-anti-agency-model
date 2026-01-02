@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { nanoid } from 'nanoid';
+import { withRateLimit, rateLimiters } from '@/lib/rate-limit';
+import { requireAuth, requireSiteOwnership } from '@/lib/api-security';
+import { loggers } from '@/lib/logger';
 
 // Allowed buckets and their configurations
 const BUCKET_CONFIG: Record<string, { maxSize: number; allowedTypes: string[] }> = {
@@ -37,12 +40,28 @@ const BUCKET_CONFIG: Record<string, { maxSize: number; allowedTypes: string[] }>
 // POST /api/upload - Upload a file
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting (stricter than middleware default)
+    const rateLimit = withRateLimit(request, rateLimiters.uploads);
+    if (!rateLimit.allowed) {
+      return rateLimit.response;
+    }
+
+    const supabase = await createClient();
+
+    // Require authentication
+    const auth = await requireAuth(supabase);
+
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const bucket = (formData.get('bucket') as string) || 'site-images';
     const folder = formData.get('folder') as string | null;
     const siteId = formData.get('siteId') as string | null;
     const siteSlug = formData.get('siteSlug') as string | null;
+
+    // If siteId is provided, verify the user owns the site
+    if (siteId) {
+      await requireSiteOwnership(supabase, siteId);
+    }
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -75,8 +94,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
-
     // Generate unique file path
     const extension = file.name.split('.').pop() || '';
     const uniqueId = nanoid(10);
@@ -106,7 +123,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      console.error('Storage upload error:', error);
+      loggers.api.error({ error, bucket, filePath }, 'Storage upload error');
 
       // If bucket doesn't exist, fall back to base64
       if (error.message.includes('not found') || error.message.includes('bucket')) {
@@ -139,7 +156,15 @@ export async function POST(request: NextRequest) {
       type: file.type,
     }, { status: 201 });
   } catch (error) {
-    console.error('Upload error:', error);
+    // Handle auth errors from requireAuth/requireSiteOwnership
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (error instanceof Error && error.message.includes('permission')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    loggers.api.error({ error }, 'Upload error');
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }
@@ -147,6 +172,11 @@ export async function POST(request: NextRequest) {
 // DELETE /api/upload - Delete a file
 export async function DELETE(request: NextRequest) {
   try {
+    const supabase = await createClient();
+
+    // Require authentication
+    await requireAuth(supabase);
+
     const { bucket, path } = await request.json();
 
     if (!bucket || !path) {
@@ -163,12 +193,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
-
     const { error } = await supabase.storage.from(bucket).remove([path]);
 
     if (error) {
-      console.error('Storage delete error:', error);
+      loggers.api.error({ error, bucket, path }, 'Storage delete error');
       return NextResponse.json(
         { error: 'Failed to delete file' },
         { status: 500 }
@@ -177,7 +205,12 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Delete error:', error);
+    // Handle auth errors
+    if (error instanceof Error && error.message.includes('Authentication')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    loggers.api.error({ error }, 'Delete error');
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }

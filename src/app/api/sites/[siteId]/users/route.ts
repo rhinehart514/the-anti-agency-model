@@ -1,5 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { withRateLimit, rateLimiters } from '@/lib/rate-limit';
+import { sendInvitationEmail } from '@/lib/email/send';
+import { randomBytes } from 'crypto';
+import { z } from 'zod';
+import { sanitizeSearchParam } from '@/lib/api-security';
+import { loggers } from '@/lib/logger';
+
+// Zod schema for user invitation
+const UserInviteSchema = z.object({
+  email: z.string().email().max(255),
+  name: z.string().max(255).optional(),
+  roleIds: z.array(z.string().uuid()).optional(),
+  sendInvite: z.boolean().default(true),
+});
+
+// Zod schema for user update
+const UserUpdateSchema = z.object({
+  userId: z.string().uuid(),
+  name: z.string().max(255).optional(),
+  status: z.enum(['active', 'pending', 'suspended', 'inactive']).optional(),
+  roleIds: z.array(z.string().uuid()).optional(),
+  metadata: z.record(z.any()).optional(),
+});
+
+// Helper to verify site ownership
+async function verifySiteOwnership(supabase: any, siteId: string): Promise<{ authorized: boolean; userId?: string }> {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { authorized: false };
+  }
+
+  const { data: site } = await supabase
+    .from('sites')
+    .select('user_id')
+    .eq('id', siteId)
+    .single();
+
+  if (!site || site.user_id !== user.id) {
+    return { authorized: false };
+  }
+
+  return { authorized: true, userId: user.id };
+}
 
 // GET /api/sites/[siteId]/users - List all site users
 export async function GET(
@@ -8,9 +52,19 @@ export async function GET(
 ) {
   try {
     const supabase = await createClient();
+
+    // Verify authentication and site ownership
+    const { authorized } = await verifySiteOwnership(supabase, params.siteId);
+    if (!authorized) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
 
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
     const offset = parseInt(searchParams.get('offset') || '0');
     const status = searchParams.get('status');
     const search = searchParams.get('search');
@@ -32,13 +86,14 @@ export async function GET(
     }
 
     if (search) {
-      query = query.or(`email.ilike.%${search}%,name.ilike.%${search}%`);
+      const safeSearch = sanitizeSearchParam(search);
+      query = query.or(`email.ilike.%${safeSearch}%,name.ilike.%${safeSearch}%`);
     }
 
     const { data: users, count, error } = await query;
 
     if (error) {
-      console.error('Error fetching users:', error);
+      loggers.api.error({ error }, 'Error fetching users');
       return NextResponse.json(
         { error: 'Failed to fetch users' },
         { status: 500 }
@@ -55,7 +110,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Users error:', error);
+    loggers.api.error({ error }, 'Users error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -69,17 +124,29 @@ export async function POST(
   { params }: { params: { siteId: string } }
 ) {
   try {
-    const body = await request.json();
-    const { email, name, roleIds, sendInvite = true } = body;
+    const supabase = await createClient();
 
-    if (!email) {
+    // Verify authentication and site ownership
+    const { authorized } = await verifySiteOwnership(supabase, params.siteId);
+    if (!authorized) {
       return NextResponse.json(
-        { error: 'Email is required' },
-        { status: 400 }
+        { error: 'Unauthorized' },
+        { status: 401 }
       );
     }
 
-    const supabase = await createClient();
+    const body = await request.json();
+    const parseResult = UserInviteSchema.safeParse(body);
+
+    if (!parseResult.success) {
+      const errors = parseResult.error.errors.map((e) => ({
+        field: e.path.join('.'),
+        message: e.message,
+      }));
+      return NextResponse.json({ error: 'Validation failed', errors }, { status: 400 });
+    }
+
+    const { email, name, roleIds, sendInvite } = parseResult.data;
 
     // Check if user already exists
     const { data: existing } = await supabase
@@ -110,7 +177,7 @@ export async function POST(
       .single();
 
     if (userError) {
-      console.error('Error creating user:', userError);
+      loggers.api.error({ error: userError }, 'Error creating user');
       return NextResponse.json(
         { error: 'Failed to create user' },
         { status: 500 }
@@ -127,9 +194,46 @@ export async function POST(
       await supabase.from('site_user_roles').insert(roleAssignments);
     }
 
-    // TODO: Send invitation email if sendInvite is true
+    // Send invitation email if sendInvite is true
     if (sendInvite) {
-      // await sendInvitationEmail(email, site, user);
+      // Get site info for the email
+      const { data: site } = await supabase
+        .from('sites')
+        .select('name, slug')
+        .eq('id', params.siteId)
+        .single();
+
+      // Generate invitation token
+      const inviteToken = randomBytes(32).toString('hex');
+
+      // Store token (you could also add an invitations table)
+      await supabase
+        .from('site_users')
+        .update({
+          metadata: {
+            ...user.metadata,
+            invite_token: inviteToken,
+            invite_expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          }
+        })
+        .eq('id', user.id);
+
+      // Build invite URL
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const inviteUrl = `${appUrl}/sites/${site?.slug || params.siteId}/accept-invite?token=${inviteToken}`;
+
+      // Send the email
+      try {
+        await sendInvitationEmail(email.toLowerCase(), {
+          inviteeName: name,
+          siteName: site?.name || 'our platform',
+          inviteUrl,
+          expiresIn: '7 days',
+        });
+      } catch (emailError) {
+        loggers.api.error({ error: emailError }, 'Failed to send invitation email');
+        // Continue - user was created, email just failed
+      }
     }
 
     // Fetch complete user
@@ -146,10 +250,168 @@ export async function POST(
 
     return NextResponse.json({ user: completeUser }, { status: 201 });
   } catch (error) {
-    console.error('Create user error:', error);
+    loggers.api.error({ error }, 'Create user error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }
     );
+  }
+}
+
+// PATCH /api/sites/[siteId]/users - Update a user
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { siteId: string } }
+) {
+  try {
+    const supabase = await createClient();
+
+    const { authorized } = await verifySiteOwnership(supabase, params.siteId);
+    if (!authorized) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const parseResult = UserUpdateSchema.safeParse(body);
+
+    if (!parseResult.success) {
+      const errors = parseResult.error.errors.map((e) => ({
+        field: e.path.join('.'),
+        message: e.message,
+      }));
+      return NextResponse.json({ error: 'Validation failed', errors }, { status: 400 });
+    }
+
+    const { userId, name, status, roleIds, metadata } = parseResult.data;
+
+    // Verify user belongs to this site
+    const { data: existingUser } = await supabase
+      .from('site_users')
+      .select('id')
+      .eq('id', userId)
+      .eq('site_id', params.siteId)
+      .single();
+
+    if (!existingUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Build update object
+    const dbUpdates: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (name !== undefined) dbUpdates.name = name;
+    if (status !== undefined) dbUpdates.status = status;
+    if (metadata !== undefined) dbUpdates.metadata = metadata;
+
+    const { error: updateError } = await supabase
+      .from('site_users')
+      .update(dbUpdates)
+      .eq('id', userId)
+      .eq('site_id', params.siteId);
+
+    if (updateError) {
+      loggers.api.error({ error: updateError }, 'Error updating user');
+      return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
+    }
+
+    // Update roles if provided
+    if (roleIds !== undefined) {
+      // Remove existing roles
+      await supabase
+        .from('site_user_roles')
+        .delete()
+        .eq('site_user_id', userId);
+
+      // Add new roles
+      if (roleIds.length > 0) {
+        const roleAssignments = roleIds.map((roleId) => ({
+          site_user_id: userId,
+          site_role_id: roleId,
+        }));
+        await supabase.from('site_user_roles').insert(roleAssignments);
+      }
+    }
+
+    // Fetch updated user
+    const { data: updatedUser } = await supabase
+      .from('site_users')
+      .select(`
+        *,
+        site_user_roles (
+          site_roles (id, name)
+        )
+      `)
+      .eq('id', userId)
+      .single();
+
+    return NextResponse.json({ user: updatedUser });
+  } catch (error) {
+    loggers.api.error({ error }, 'Update user error');
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+  }
+}
+
+// DELETE /api/sites/[siteId]/users - Delete a user
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { siteId: string } }
+) {
+  try {
+    const supabase = await createClient();
+
+    const { authorized } = await verifySiteOwnership(supabase, params.siteId);
+    if (!authorized) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { userId } = body;
+
+    if (!userId || typeof userId !== 'string') {
+      return NextResponse.json({ error: 'userId is required' }, { status: 400 });
+    }
+
+    // Verify user belongs to this site
+    const { data: existingUser } = await supabase
+      .from('site_users')
+      .select('id')
+      .eq('id', userId)
+      .eq('site_id', params.siteId)
+      .single();
+
+    if (!existingUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Delete user roles first (cascade might handle this, but be explicit)
+    await supabase
+      .from('site_user_roles')
+      .delete()
+      .eq('site_user_id', userId);
+
+    // Delete user sessions
+    await supabase
+      .from('site_sessions')
+      .delete()
+      .eq('site_user_id', userId);
+
+    // Delete the user
+    const { error } = await supabase
+      .from('site_users')
+      .delete()
+      .eq('id', userId)
+      .eq('site_id', params.siteId);
+
+    if (error) {
+      loggers.api.error({ error }, 'Error deleting user');
+      return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
+    }
+
+    return NextResponse.json({ deleted: true });
+  } catch (error) {
+    loggers.api.error({ error }, 'Delete user error');
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }

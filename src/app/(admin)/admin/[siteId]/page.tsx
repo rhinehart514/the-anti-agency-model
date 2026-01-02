@@ -49,22 +49,24 @@ export default function AdminDashboard({ params }: { params: { siteId: string } 
     async function fetchDashboardData() {
       try {
         // Fetch stats from multiple endpoints
-        const [pagesRes, usersRes, ordersRes, formsRes, collectionsRes, productsRes] = await Promise.all([
+        const [pagesRes, usersRes, ordersRes, formsRes, collectionsRes, productsRes, analyticsRes] = await Promise.all([
           fetch(`/api/sites/${params.siteId}/pages`),
           fetch(`/api/sites/${params.siteId}/users`),
           fetch(`/api/sites/${params.siteId}/orders`),
           fetch(`/api/sites/${params.siteId}/forms`),
           fetch(`/api/sites/${params.siteId}/collections`),
           fetch(`/api/sites/${params.siteId}/products`),
+          fetch(`/api/sites/${params.siteId}/analytics/summary?period=30d`),
         ]);
 
-        const [pagesData, usersData, ordersData, formsData, collectionsData, productsData] = await Promise.all([
+        const [pagesData, usersData, ordersData, formsData, collectionsData, productsData, analyticsData] = await Promise.all([
           pagesRes.json().catch(() => ({ pages: [] })),
           usersRes.json().catch(() => ({ users: [] })),
           ordersRes.json().catch(() => ({ orders: [], pagination: { total: 0 } })),
           formsRes.json().catch(() => ({ forms: [] })),
           collectionsRes.json().catch(() => ({ collections: [] })),
           productsRes.json().catch(() => ({ products: [], pagination: { total: 0 } })),
+          analyticsRes.json().catch(() => ({ summary: { pageViews: 0, formSubmissions: 0 } })),
         ]);
 
         // Calculate revenue
@@ -73,8 +75,12 @@ export default function AdminDashboard({ params }: { params: { siteId: string } 
           0
         );
 
-        // Calculate form submissions
-        const formSubmissions = (formsData.forms || []).reduce(
+        // Get analytics data
+        const pageViews = analyticsData.summary?.pageViews || 0;
+        const analyticsFormSubmissions = analyticsData.summary?.formSubmissions || 0;
+
+        // Calculate form submissions (fallback to counting from forms if analytics not available)
+        const formSubmissions = analyticsFormSubmissions || (formsData.forms || []).reduce(
           (sum: number, form: any) => sum + (form.submissionCount || 0),
           0
         );
@@ -84,7 +90,7 @@ export default function AdminDashboard({ params }: { params: { siteId: string } 
           users: usersData.users?.length || usersData.pagination?.total || 0,
           orders: ordersData.pagination?.total || ordersData.orders?.length || 0,
           revenue,
-          pageViews: 0, // TODO: Implement analytics
+          pageViews,
           formSubmissions,
           collections: collectionsData.collections?.length || 0,
           products: productsData.pagination?.total || productsData.products?.length || 0,

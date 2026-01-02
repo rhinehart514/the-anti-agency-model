@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createRefund } from '@/lib/stripe/client';
+import { loggers } from '@/lib/logger';
 
 // GET /api/sites/[siteId]/orders/[orderId] - Get a single order
 export async function GET(
@@ -34,7 +35,7 @@ export async function GET(
 
     return NextResponse.json({ order });
   } catch (error) {
-    console.error('Order error:', error);
+    loggers.api.error({ error }, 'Order error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -89,7 +90,7 @@ export async function PATCH(
       .single();
 
     if (error) {
-      console.error('Error updating order:', error);
+      loggers.api.error({ error }, 'Error updating order');
       return NextResponse.json(
         { error: 'Failed to update order' },
         { status: 500 }
@@ -98,7 +99,7 @@ export async function PATCH(
 
     return NextResponse.json({ order });
   } catch (error) {
-    console.error('Update order error:', error);
+    loggers.api.error({ error }, 'Update order error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }
@@ -150,7 +151,7 @@ export async function POST(
       .single();
 
     if (updateError) {
-      console.error('Error processing refund:', updateError);
+      loggers.api.error({ error: updateError }, 'Error processing refund');
       return NextResponse.json(
         { error: 'Failed to process refund' },
         { status: 500 }
@@ -206,7 +207,7 @@ export async function POST(
           })
           .eq('id', params.orderId);
       } catch (stripeError: any) {
-        console.error('Stripe refund error:', stripeError);
+        loggers.api.error({ error: stripeError }, 'Stripe refund error');
         return NextResponse.json(
           { error: `Refund failed: ${stripeError.message}` },
           { status: 500 }
@@ -221,7 +222,7 @@ export async function POST(
       message: 'Refund processed successfully',
     });
   } catch (error) {
-    console.error('Refund error:', error);
+    loggers.api.error({ error }, 'Refund error');
     return NextResponse.json(
       { error: 'Invalid request' },
       { status: 400 }
