@@ -131,21 +131,21 @@ export default function AdminDashboard({ params }: { params: { siteId: string } 
   }, [params.siteId]);
 
   const statCards = [
-    { label: 'Total Pages', value: stats.pages, icon: FileText, color: 'text-blue-600', bg: 'bg-blue-100' },
-    { label: 'Site Users', value: stats.users, icon: Users, color: 'text-green-600', bg: 'bg-green-100' },
-    { label: 'Total Orders', value: stats.orders, icon: ShoppingCart, color: 'text-purple-600', bg: 'bg-purple-100' },
-    { label: 'Revenue', value: `$${stats.revenue.toFixed(2)}`, icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-    { label: 'Page Views', value: stats.pageViews, icon: Eye, color: 'text-orange-600', bg: 'bg-orange-100' },
-    { label: 'Form Submissions', value: stats.formSubmissions, icon: FormInput, color: 'text-pink-600', bg: 'bg-pink-100' },
-    { label: 'Collections', value: stats.collections, icon: Database, color: 'text-cyan-600', bg: 'bg-cyan-100' },
-    { label: 'Products', value: stats.products, icon: TrendingUp, color: 'text-indigo-600', bg: 'bg-indigo-100' },
+    { label: 'Total Pages', value: stats.pages, icon: FileText, color: 'text-blue-400', bg: 'bg-blue-500/20' },
+    { label: 'Site Users', value: stats.users, icon: Users, color: 'text-green-400', bg: 'bg-green-500/20' },
+    { label: 'Total Orders', value: stats.orders, icon: ShoppingCart, color: 'text-purple-400', bg: 'bg-purple-500/20' },
+    { label: 'Revenue', value: `$${stats.revenue.toFixed(2)}`, icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
+    { label: 'Page Views', value: stats.pageViews, icon: Eye, color: 'text-orange-400', bg: 'bg-orange-500/20' },
+    { label: 'Form Submissions', value: stats.formSubmissions, icon: FormInput, color: 'text-pink-400', bg: 'bg-pink-500/20' },
+    { label: 'Collections', value: stats.collections, icon: Database, color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
+    { label: 'Products', value: stats.products, icon: TrendingUp, color: 'text-indigo-400', bg: 'bg-indigo-500/20' },
   ];
 
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600">Overview of your site's performance</p>
+        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+        <p className="text-muted-foreground">Overview of your site's performance</p>
       </div>
 
       {/* Stats Grid */}
@@ -155,8 +155,8 @@ export default function AdminDashboard({ params }: { params: { siteId: string } 
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">{stat.label}</p>
-                  <p className="text-2xl font-bold mt-1">
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                  <p className="text-2xl font-bold text-foreground mt-1">
                     {loading ? '...' : stat.value}
                   </p>
                 </div>
@@ -177,9 +177,9 @@ export default function AdminDashboard({ params }: { params: { siteId: string } 
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8 text-gray-500">Loading...</div>
+              <div className="text-center py-8 text-muted-foreground">Loading...</div>
             ) : recentActivity.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 No recent activity
               </div>
             ) : (
@@ -187,24 +187,24 @@ export default function AdminDashboard({ params }: { params: { siteId: string } 
                 {recentActivity.map((activity) => (
                   <div
                     key={activity.id}
-                    className="flex items-center gap-4 p-3 rounded-lg bg-gray-50"
+                    className="flex items-center gap-4 p-3 rounded-lg bg-muted"
                   >
                     <div className={`p-2 rounded-lg ${
-                      activity.type === 'order' ? 'bg-purple-100' :
-                      activity.type === 'signup' ? 'bg-green-100' :
-                      activity.type === 'submission' ? 'bg-pink-100' :
-                      'bg-orange-100'
+                      activity.type === 'order' ? 'bg-purple-500/20' :
+                      activity.type === 'signup' ? 'bg-green-500/20' :
+                      activity.type === 'submission' ? 'bg-pink-500/20' :
+                      'bg-orange-500/20'
                     }`}>
-                      {activity.type === 'order' && <ShoppingCart className="h-4 w-4 text-purple-600" />}
-                      {activity.type === 'signup' && <Users className="h-4 w-4 text-green-600" />}
-                      {activity.type === 'submission' && <FormInput className="h-4 w-4 text-pink-600" />}
-                      {activity.type === 'page_view' && <Eye className="h-4 w-4 text-orange-600" />}
+                      {activity.type === 'order' && <ShoppingCart className="h-4 w-4 text-purple-400" />}
+                      {activity.type === 'signup' && <Users className="h-4 w-4 text-green-400" />}
+                      {activity.type === 'submission' && <FormInput className="h-4 w-4 text-pink-400" />}
+                      {activity.type === 'page_view' && <Eye className="h-4 w-4 text-orange-400" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900 truncate">
+                      <p className="text-sm text-foreground truncate">
                         {activity.description}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {new Date(activity.timestamp).toLocaleString()}
                       </p>
                     </div>
@@ -224,31 +224,31 @@ export default function AdminDashboard({ params }: { params: { siteId: string } 
             <div className="grid grid-cols-2 gap-4">
               <a
                 href={`/admin/${params.siteId}/pages/new`}
-                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-blue-400 hover:bg-blue-500/10 transition-colors"
               >
-                <FileText className="h-6 w-6 text-blue-600" />
-                <span className="text-sm font-medium">New Page</span>
+                <FileText className="h-6 w-6 text-blue-400" />
+                <span className="text-sm font-medium text-foreground">New Page</span>
               </a>
               <a
                 href={`/admin/${params.siteId}/collections/new`}
-                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 hover:border-cyan-500 hover:bg-cyan-50 transition-colors"
+                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-cyan-400 hover:bg-cyan-500/10 transition-colors"
               >
-                <Database className="h-6 w-6 text-cyan-600" />
-                <span className="text-sm font-medium">New Collection</span>
+                <Database className="h-6 w-6 text-cyan-400" />
+                <span className="text-sm font-medium text-foreground">New Collection</span>
               </a>
               <a
                 href={`/admin/${params.siteId}/forms/new`}
-                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 hover:border-pink-500 hover:bg-pink-50 transition-colors"
+                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-pink-400 hover:bg-pink-500/10 transition-colors"
               >
-                <FormInput className="h-6 w-6 text-pink-600" />
-                <span className="text-sm font-medium">New Form</span>
+                <FormInput className="h-6 w-6 text-pink-400" />
+                <span className="text-sm font-medium text-foreground">New Form</span>
               </a>
               <a
                 href={`/admin/${params.siteId}/commerce/products/new`}
-                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 hover:border-purple-500 hover:bg-purple-50 transition-colors"
+                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-purple-400 hover:bg-purple-500/10 transition-colors"
               >
-                <ShoppingCart className="h-6 w-6 text-purple-600" />
-                <span className="text-sm font-medium">New Product</span>
+                <ShoppingCart className="h-6 w-6 text-purple-400" />
+                <span className="text-sm font-medium text-foreground">New Product</span>
               </a>
             </div>
           </CardContent>

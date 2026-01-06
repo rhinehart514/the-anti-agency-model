@@ -97,10 +97,10 @@ export function PageList({
   };
 
   return (
-    <div className="h-full flex flex-col border-r bg-white">
+    <div className="h-full flex flex-col border-r border-border bg-card">
       {/* Header */}
-      <div className="p-3 border-b flex items-center justify-between">
-        <h3 className="font-semibold text-sm text-gray-700">Pages</h3>
+      <div className="p-3 border-b border-border flex items-center justify-between">
+        <h3 className="font-semibold text-sm text-foreground">Pages</h3>
         <Dialog open={isNewPageOpen} onOpenChange={setIsNewPageOpen}>
           <DialogTrigger asChild>
             <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
@@ -131,7 +131,7 @@ export function PageList({
               <div className="space-y-2">
                 <label className="text-sm font-medium">URL Slug</label>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">/</span>
+                  <span className="text-sm text-muted-foreground">/</span>
                   <Input
                     placeholder="about-us"
                     value={newPageSlug}
@@ -155,7 +155,7 @@ export function PageList({
       {/* Page list */}
       <div className="flex-1 overflow-auto p-2 space-y-1">
         {pages.length === 0 ? (
-          <div className="text-center py-8 text-gray-400 text-sm">
+          <div className="text-center py-8 text-muted-foreground text-sm">
             <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p>No pages yet</p>
             <p className="text-xs">Click + to create one</p>
@@ -167,8 +167,8 @@ export function PageList({
               className={cn(
                 'group flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors',
                 currentPageId === page.id
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'hover:bg-gray-100 text-gray-700'
+                  ? 'bg-primary/10 text-primary'
+                  : 'hover:bg-muted text-foreground'
               )}
               onClick={() => onSelectPage(page.id)}
             >
@@ -179,7 +179,7 @@ export function PageList({
               )}
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium truncate">{page.title}</div>
-                <div className="text-xs text-gray-500 truncate">/{page.slug}</div>
+                <div className="text-xs text-muted-foreground truncate">/{page.slug}</div>
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -221,7 +221,7 @@ export function PageList({
                         Set as Home
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="text-red-600"
+                        className="text-red-400"
                         onClick={() => onDeletePage(page.id)}
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
@@ -256,7 +256,7 @@ export function PageList({
             <div className="space-y-2">
               <label className="text-sm font-medium">URL Slug</label>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">/</span>
+                <span className="text-sm text-muted-foreground">/</span>
                 <Input
                   value={newPageSlug}
                   onChange={(e) => setNewPageSlug(generateSlug(e.target.value))}
@@ -264,7 +264,7 @@ export function PageList({
                 />
               </div>
               {editingPage?.isHome && (
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Home page slug cannot be changed
                 </p>
               )}

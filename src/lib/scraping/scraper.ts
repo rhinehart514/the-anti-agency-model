@@ -16,7 +16,7 @@ const DEFAULT_OPTIONS: Required<ScrapeOptions> = {
   includeImages: true,
   followLinks: false,
   userAgent:
-    'Mozilla/5.0 (compatible; AntiAgencyBot/1.0; +https://theantiagency.com/bot)',
+    'Mozilla/5.0 (compatible; CursorBot/1.0; +https://cursorfornormies.com/bot)',
 };
 
 const BLOCKED_EXTENSIONS = [

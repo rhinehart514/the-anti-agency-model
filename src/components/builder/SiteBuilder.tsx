@@ -173,10 +173,10 @@ export function SiteBuilder({
 
   if (!currentPage) {
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">No pages found</h2>
-          <p className="text-gray-500 mb-4">Create your first page to get started</p>
+          <h2 className="text-xl font-semibold text-foreground mb-2">No pages found</h2>
+          <p className="text-muted-foreground mb-4">Create your first page to get started</p>
           <Button onClick={() => handleCreatePage('Home', '')}>
             Create Home Page
           </Button>
@@ -186,21 +186,21 @@ export function SiteBuilder({
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col bg-background">
       {/* Site Header */}
-      <div className="h-12 bg-slate-800 text-white flex items-center justify-between px-4 shrink-0">
+      <div className="h-12 bg-card border-b border-border flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-4">
           <a
             href={`/sites/${site.slug}`}
-            className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="text-sm">Exit Builder</span>
           </a>
-          <div className="w-px h-6 bg-slate-600" />
+          <div className="w-px h-6 bg-border" />
           <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-slate-400" />
-            <span className="font-medium">{site.name}</span>
+            <Globe className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-foreground">{site.name}</span>
           </div>
         </div>
 
@@ -210,7 +210,7 @@ export function SiteBuilder({
             pages={site.pages}
             onChange={handleNavigationChange}
           />
-          <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white">
+          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
             <Settings className="h-4 w-4 mr-2" />
             Settings
           </Button>

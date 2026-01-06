@@ -1,6 +1,6 @@
 # Environment Variables Reference
 
-This document describes all environment variables used by The Anti-Agency platform.
+This document describes all environment variables used by Cursor for Normies.
 
 ## Quick Start
 

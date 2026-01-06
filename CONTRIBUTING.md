@@ -1,4 +1,4 @@
-# Contributing to The Anti-Agency
+# Contributing to Cursor for Normies
 
 Thank you for your interest in contributing! This guide will help you get set up and understand our development workflow.
 
@@ -14,8 +14,8 @@ Thank you for your interest in contributing! This guide will help you get set up
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-org/the-anti-agency-model.git
-cd the-anti-agency-model
+git clone https://github.com/your-org/cursor-for-normies.git
+cd cursor-for-normies
 ```
 
 ### 2. Install Dependencies

@@ -19,12 +19,10 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import type { ScrapedSiteData } from '@/lib/scraping/types';
-import type { DiagnosisResult } from '@/lib/diagnosis/types';
 
 interface ImportData {
   url: string;
   scraped: ScrapedSiteData;
-  diagnosis: DiagnosisResult;
   generated: {
     content: unknown;
     improvements: string[];
@@ -102,7 +100,6 @@ export default function PreviewPage() {
             sourceUrl: importData.url,
             sourcePlatform: importData.scraped.platform,
             scrapedData: importData.scraped,
-            diagnosisResult: importData.diagnosis,
           },
         }),
       });
@@ -305,7 +302,7 @@ export default function PreviewPage() {
                             <div className="w-3 h-3 rounded-full bg-green-500" />
                           </div>
                           <div className="flex-1 bg-white dark:bg-slate-900 rounded px-3 py-1 text-sm text-slate-500">
-                            {siteSlug}.theantiagency.com
+                            {siteSlug}.cursorfornormies.com
                           </div>
                         </div>
 

@@ -11,23 +11,19 @@ import {
   Loader2,
   CheckCircle,
   XCircle,
-  AlertTriangle,
   ArrowRight,
   Globe,
-  Search,
   Sparkles,
   FileText,
 } from 'lucide-react';
 import type { ScrapedSiteData } from '@/lib/scraping/types';
-import type { DiagnosisResult } from '@/lib/diagnosis/types';
 
-type Step = 'scraping' | 'diagnosing' | 'generating' | 'complete' | 'error';
+type Step = 'scraping' | 'generating' | 'complete' | 'error';
 
 interface AnalysisState {
   step: Step;
   progress: number;
   scraped: ScrapedSiteData | null;
-  diagnosis: DiagnosisResult | null;
   generated: {
     content: unknown;
     improvements: string[];
@@ -44,7 +40,6 @@ function AnalyzingContent() {
     step: 'scraping',
     progress: 0,
     scraped: null,
-    diagnosis: null,
     generated: null,
     error: null,
   });
@@ -57,7 +52,7 @@ function AnalyzingContent() {
 
     try {
       // Step 1: Scrape the URL
-      setState((s) => ({ ...s, step: 'scraping', progress: 10 }));
+      setState((s) => ({ ...s, step: 'scraping', progress: 20 }));
 
       const scrapeResponse = await fetch('/api/import/scrape', {
         method: 'POST',
@@ -71,30 +66,9 @@ function AnalyzingContent() {
       }
 
       const scrapeResult = await scrapeResponse.json();
-      setState((s) => ({ ...s, scraped: scrapeResult.data, progress: 30 }));
+      setState((s) => ({ ...s, scraped: scrapeResult.data, progress: 50 }));
 
-      // Step 2: Diagnose the site
-      setState((s) => ({ ...s, step: 'diagnosing', progress: 40 }));
-
-      // We need to fetch the HTML for diagnosis
-      const htmlResponse = await fetch(url);
-      const html = await htmlResponse.text();
-
-      const diagnoseResponse = await fetch('/api/import/diagnose', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, html }),
-      });
-
-      if (!diagnoseResponse.ok) {
-        const error = await diagnoseResponse.json();
-        throw new Error(error.error || 'Failed to diagnose website');
-      }
-
-      const diagnoseResult = await diagnoseResponse.json();
-      setState((s) => ({ ...s, diagnosis: diagnoseResult.data, progress: 60 }));
-
-      // Step 3: Generate improved content
+      // Step 2: Generate improved content
       setState((s) => ({ ...s, step: 'generating', progress: 70 }));
 
       const generateResponse = await fetch('/api/import/generate', {
@@ -102,7 +76,6 @@ function AnalyzingContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           scraped: scrapeResult.data,
-          diagnosis: diagnoseResult.data,
         }),
       });
 
@@ -135,7 +108,6 @@ function AnalyzingContent() {
       JSON.stringify({
         url,
         scraped: state.scraped,
-        diagnosis: state.diagnosis,
         generated: state.generated,
       })
     );
@@ -147,7 +119,6 @@ function AnalyzingContent() {
       step: 'scraping',
       progress: 0,
       scraped: null,
-      diagnosis: null,
       generated: null,
       error: null,
     });
@@ -158,8 +129,6 @@ function AnalyzingContent() {
     switch (step) {
       case 'scraping':
         return <Globe className="h-5 w-5" />;
-      case 'diagnosing':
-        return <Search className="h-5 w-5" />;
       case 'generating':
         return <Sparkles className="h-5 w-5" />;
       case 'complete':
@@ -173,8 +142,6 @@ function AnalyzingContent() {
     switch (step) {
       case 'scraping':
         return 'Analyzing your website...';
-      case 'diagnosing':
-        return 'Running diagnostics...';
       case 'generating':
         return 'Generating improved content...';
       case 'complete':
@@ -208,13 +175,13 @@ function AnalyzingContent() {
                 <div className="space-y-4">
                   <Progress value={state.progress} className="h-2" />
 
-                  <div className="grid grid-cols-4 gap-4">
-                    {(['scraping', 'diagnosing', 'generating', 'complete'] as const).map(
+                  <div className="grid grid-cols-3 gap-4">
+                    {(['scraping', 'generating', 'complete'] as const).map(
                       (stepName, index) => {
                         const stepNumber = index + 1;
                         const isActive = state.step === stepName;
                         const isComplete =
-                          ['scraping', 'diagnosing', 'generating', 'complete'].indexOf(
+                          ['scraping', 'generating', 'complete'].indexOf(
                             state.step
                           ) > index;
 
@@ -249,11 +216,9 @@ function AnalyzingContent() {
                             <span className="text-xs font-medium capitalize">
                               {stepName === 'scraping'
                                 ? 'Scrape'
-                                : stepName === 'diagnosing'
-                                  ? 'Diagnose'
-                                  : stepName === 'generating'
-                                    ? 'Generate'
-                                    : 'Done'}
+                                : stepName === 'generating'
+                                  ? 'Generate'
+                                  : 'Done'}
                             </span>
                           </div>
                         );
@@ -275,67 +240,44 @@ function AnalyzingContent() {
           )}
 
           {/* Results Preview */}
-          {state.step === 'complete' && state.diagnosis && (
+          {state.step === 'complete' && state.generated && (
             <div className="space-y-6">
-              {/* Score Card */}
+              {/* Success Card */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-5 w-5" />
-                    Site Analysis Results
+                    Content Generated Successfully
                   </CardTitle>
                   <CardDescription>
-                    Here's what we found and how we'll improve it
+                    We've analyzed your website and created improved content
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid md:grid-cols-2 gap-6">
-                    {/* Overall Score */}
-                    <div className="text-center p-6 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                      <div
-                        className={`text-5xl font-bold mb-2 ${
-                          state.diagnosis.overallScore >= 70
-                            ? 'text-green-600'
-                            : state.diagnosis.overallScore >= 50
-                              ? 'text-yellow-600'
-                              : 'text-red-600'
-                        }`}
-                      >
-                        {state.diagnosis.overallScore}
+                    {/* Business Info */}
+                    <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                      <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+                        Business Detected
                       </div>
-                      <div className="text-sm text-slate-600 dark:text-slate-400">
-                        Overall Score
+                      <div className="font-semibold text-lg">
+                        {state.scraped?.business.name || 'Your Business'}
                       </div>
-                      <Badge
-                        variant={
-                          state.diagnosis.overallGrade === 'A' || state.diagnosis.overallGrade === 'B'
-                            ? 'default'
-                            : state.diagnosis.overallGrade === 'C'
-                              ? 'secondary'
-                              : 'destructive'
-                        }
-                        className="mt-2"
-                      >
-                        Grade: {state.diagnosis.overallGrade}
-                      </Badge>
+                      {state.scraped?.business.tagline && (
+                        <div className="text-sm text-slate-500 mt-1">
+                          {state.scraped.business.tagline}
+                        </div>
+                      )}
                     </div>
 
-                    {/* Issues Summary */}
+                    {/* Improvements Made */}
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-slate-600 dark:text-slate-400">
-                          Critical Issues
+                          Content Sections
                         </span>
-                        <Badge variant="destructive">
-                          {state.diagnosis.issues.filter((i) => i.severity === 'critical').length}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-600 dark:text-slate-400">
-                          Warnings
-                        </span>
-                        <Badge variant="secondary">
-                          {state.diagnosis.issues.filter((i) => i.severity === 'warning').length}
+                        <Badge variant="default">
+                          {state.scraped?.content.services.length || 0} services
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between">
@@ -351,33 +293,24 @@ function AnalyzingContent() {
                 </CardContent>
               </Card>
 
-              {/* Issues Found */}
-              {state.diagnosis.issues.length > 0 && (
+              {/* Improvements List */}
+              {state.generated.improvements.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                      Issues We'll Fix
+                      <Sparkles className="h-5 w-5 text-blue-600" />
+                      Improvements Made
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {state.diagnosis.issues.slice(0, 5).map((issue, index) => (
+                      {state.generated.improvements.map((improvement, index) => (
                         <div
                           key={index}
                           className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
                         >
-                          {issue.severity === 'critical' ? (
-                            <XCircle className="h-5 w-5 text-red-500 mt-0.5" />
-                          ) : (
-                            <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5" />
-                          )}
-                          <div>
-                            <div className="font-medium">{issue.title}</div>
-                            <div className="text-sm text-slate-600 dark:text-slate-400">
-                              {issue.howWeFix}
-                            </div>
-                          </div>
+                          <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                          <div className="text-sm">{improvement}</div>
                         </div>
                       ))}
                     </div>

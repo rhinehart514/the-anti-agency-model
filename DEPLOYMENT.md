@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide covers deploying The Anti-Agency to production.
+This guide covers deploying Cursor for Normies to production.
 
 ## Supported Platforms
 

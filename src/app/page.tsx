@@ -7,7 +7,7 @@ export default function Home() {
         {/* Header */}
         <header className="text-center mb-16">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-            The Anti-Agency
+            Cursor for Normies
           </h1>
           <p className="text-xl text-slate-400 max-w-2xl mx-auto">
             No agency fees. No complicated tools. Just your professional website, built in minutes.
@@ -17,7 +17,7 @@ export default function Home() {
         {/* Main CTA */}
         <div className="text-center mb-16">
           <Link
-            href="/setup"
+            href="/create"
             className="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg shadow-blue-600/25"
           >
             Create Your Site

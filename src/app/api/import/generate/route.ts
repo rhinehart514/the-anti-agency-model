@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { generateSiteFromScraped } from '@/lib/content/generate-from-scraped';
 import type { ScrapedSiteData } from '@/lib/scraping/types';
-import type { DiagnosisResult } from '@/lib/diagnosis/types';
 import { logger } from '@/lib/logger';
 
 const GenerateRequestSchema = z.object({
@@ -54,17 +53,6 @@ const GenerateRequestSchema = z.object({
     scrapedAt: z.string().transform(s => new Date(s)),
     scrapeErrors: z.array(z.string()).optional(),
   }),
-  diagnosis: z.object({
-    url: z.string(),
-    diagnosedAt: z.string().transform(s => new Date(s)),
-    overallScore: z.number(),
-    overallGrade: z.enum(['A', 'B', 'C', 'D', 'F']),
-    categories: z.record(z.any()),
-    issues: z.array(z.any()),
-    opportunities: z.array(z.any()),
-    summary: z.string(),
-    recommendations: z.array(z.string()),
-  }),
   options: z.object({
     style: z.enum(['modern', 'classic', 'bold', 'minimal']).optional(),
     colorScheme: z.string().optional(),
@@ -85,7 +73,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { scraped, diagnosis, options } = parsed.data;
+    const { scraped, options } = parsed.data;
 
     logger.info({ url: scraped.url }, 'Starting content generation');
 
@@ -94,7 +82,6 @@ export async function POST(request: NextRequest) {
     // Generate improved content
     const result = await generateSiteFromScraped(
       scraped as unknown as ScrapedSiteData,
-      diagnosis as unknown as DiagnosisResult,
       options
     );
 

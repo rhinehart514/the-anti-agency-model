@@ -72,7 +72,7 @@ function FieldEditor({ field, value, onChange }: FieldEditorProps) {
           value={(value as string) || ''}
           onChange={(e) => onChange(e.target.value)}
           placeholder={field.placeholder}
-          className="w-full min-h-[100px] px-3 py-2 border rounded-md text-sm resize-y"
+          className="w-full min-h-[100px] px-3 py-2 border border-border rounded-md text-sm resize-y bg-background text-foreground"
         />
       );
 
@@ -119,7 +119,7 @@ function FieldEditor({ field, value, onChange }: FieldEditorProps) {
         <select
           value={(value as string) || ''}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full px-3 py-2 border rounded-md text-sm bg-white"
+          className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background text-foreground"
         >
           <option value="">Select...</option>
           {field.options?.map((opt) => (
@@ -164,7 +164,7 @@ function FieldEditor({ field, value, onChange }: FieldEditorProps) {
             placeholder="Image URL..."
           />
           {typeof value === 'string' && value && (
-            <div className="aspect-video bg-gray-100 rounded overflow-hidden">
+            <div className="aspect-video bg-muted rounded overflow-hidden">
               <img
                 src={value}
                 alt="Preview"
@@ -229,10 +229,10 @@ function FieldGroup({
             {items.map((item, index) => (
               <div
                 key={index}
-                className="p-3 bg-gray-50 rounded border space-y-3"
+                className="p-3 bg-muted rounded border border-border space-y-3"
               >
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-medium text-gray-500">
+                  <span className="text-xs font-medium text-muted-foreground">
                     Item {index + 1}
                   </span>
                   <Button
@@ -242,14 +242,14 @@ function FieldGroup({
                       const newItems = items.filter((_, i) => i !== index);
                       handleChange(newItems);
                     }}
-                    className="h-6 px-2 text-red-500 hover:text-red-700"
+                    className="h-6 px-2 text-red-400 hover:text-red-300"
                   >
                     Remove
                   </Button>
                 </div>
                 {field.itemFields?.map((itemField) => (
                   <div key={itemField.path} className="space-y-1">
-                    <label className="text-xs font-medium text-gray-600">
+                    <label className="text-xs font-medium text-muted-foreground">
                       {itemField.label}
                     </label>
                     <FieldEditor
@@ -294,9 +294,9 @@ function FieldGroup({
 
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-gray-700">{field.label}</label>
+      <label className="text-sm font-medium text-foreground">{field.label}</label>
       {field.description && (
-        <p className="text-xs text-gray-500">{field.description}</p>
+        <p className="text-xs text-muted-foreground">{field.description}</p>
       )}
       <FieldEditor field={field} value={value} onChange={handleChange} />
     </div>
@@ -310,11 +310,11 @@ export function PropertiesPanel({
 }: PropertiesPanelProps) {
   if (!selectedSection) {
     return (
-      <div className="h-full flex flex-col bg-gray-50 border-l">
-        <div className="p-4 border-b bg-white">
-          <h3 className="font-semibold text-gray-900">Properties</h3>
+      <div className="h-full flex flex-col bg-muted border-l border-border">
+        <div className="p-4 border-b border-border bg-card">
+          <h3 className="font-semibold text-foreground">Properties</h3>
         </div>
-        <div className="flex-1 flex items-center justify-center text-gray-400 text-sm p-4 text-center">
+        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm p-4 text-center">
           <div>
             <Settings className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p>Select a section to edit its properties</p>
@@ -328,14 +328,14 @@ export function PropertiesPanel({
 
   if (!componentDef) {
     return (
-      <div className="h-full flex flex-col bg-gray-50 border-l">
-        <div className="p-4 border-b bg-white flex justify-between items-center">
-          <h3 className="font-semibold text-gray-900">Properties</h3>
+      <div className="h-full flex flex-col bg-muted border-l border-border">
+        <div className="p-4 border-b border-border bg-card flex justify-between items-center">
+          <h3 className="font-semibold text-foreground">Properties</h3>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <div className="flex-1 flex items-center justify-center text-red-500 text-sm p-4 text-center">
+        <div className="flex-1 flex items-center justify-center text-red-400 text-sm p-4 text-center">
           Component "{selectedSection.componentId}" not found
         </div>
       </div>
@@ -347,11 +347,11 @@ export function PropertiesPanel({
   };
 
   return (
-    <div className="h-full flex flex-col bg-gray-50 border-l w-80">
-      <div className="p-4 border-b bg-white flex justify-between items-center">
+    <div className="h-full flex flex-col bg-muted border-l border-border w-80">
+      <div className="p-4 border-b border-border bg-card flex justify-between items-center">
         <div>
-          <h3 className="font-semibold text-gray-900">{componentDef.name}</h3>
-          <p className="text-xs text-gray-500">{componentDef.category}</p>
+          <h3 className="font-semibold text-foreground">{componentDef.name}</h3>
+          <p className="text-xs text-muted-foreground">{componentDef.category}</p>
         </div>
         <Button variant="ghost" size="sm" onClick={onClose}>
           <X className="h-4 w-4" />

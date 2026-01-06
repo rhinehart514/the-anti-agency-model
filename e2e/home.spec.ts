@@ -43,11 +43,18 @@ test.describe('Protected Routes', () => {
     expect(response?.status()).toBeLessThan(500)
   })
 
-  test('setup page loads or redirects', async ({ page }) => {
-    const response = await page.goto('/setup')
+  test('create page loads successfully', async ({ page }) => {
+    const response = await page.goto('/create')
 
-    // Should either load successfully or redirect (not 500 error)
-    expect(response?.status()).toBeLessThan(500)
+    // Should load successfully
+    expect(response?.status()).toBeLessThan(400)
+  })
+
+  test('setup page redirects to create', async ({ page }) => {
+    await page.goto('/setup')
+
+    // Should redirect to /create
+    await expect(page).toHaveURL('/create')
   })
 
   test('builder page loads or redirects', async ({ page }) => {

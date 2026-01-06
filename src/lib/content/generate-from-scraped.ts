@@ -1,6 +1,5 @@
 import type { PageContent, Section } from './types';
 import type { ScrapedSiteData } from '@/lib/scraping/types';
-import type { DiagnosisResult } from '@/lib/diagnosis/types';
 import { getGroqClient, AI_MODELS } from '@/lib/ai/client';
 import { logger } from '@/lib/logger';
 
@@ -25,9 +24,6 @@ const CONTENT_GENERATION_PROMPT = `You are an expert website content strategist.
 
 BUSINESS CONTEXT:
 {{businessContext}}
-
-CURRENT ISSUES (from site diagnosis):
-{{diagnosisIssues}}
 
 CURRENT CONTENT:
 {{currentContent}}
@@ -76,30 +72,27 @@ GUIDELINES:
 4. Include a clear call-to-action in the hero section
 5. Keep services to 3-6 items, focusing on the most important
 6. If testimonials exist, improve them. If not, suggest placeholder text to collect
-7. Address the diagnosis issues (missing trust signals, weak CTAs, etc.)
+7. Add trust signals and compelling CTAs where appropriate
 
 Respond ONLY with valid JSON, no additional text.`;
 
 export async function generateSiteFromScraped(
   scraped: ScrapedSiteData,
-  diagnosis: DiagnosisResult,
   options: GenerationOptions = {}
 ): Promise<GeneratedSite> {
   const groq = getGroqClient();
 
   if (!groq) {
     logger.warn('Groq client not configured, using template-based generation');
-    return generateWithoutAi(scraped, diagnosis, options);
+    return generateWithoutAi(scraped, options);
   }
 
   // Build context for the prompt
   const businessContext = buildBusinessContext(scraped);
-  const diagnosisIssues = buildDiagnosisContext(diagnosis);
   const currentContent = buildCurrentContentContext(scraped);
 
   const prompt = CONTENT_GENERATION_PROMPT
     .replace('{{businessContext}}', businessContext)
-    .replace('{{diagnosisIssues}}', diagnosisIssues)
     .replace('{{currentContent}}', currentContent);
 
   try {
@@ -140,7 +133,7 @@ export async function generateSiteFromScraped(
     };
   } catch (error) {
     logger.error({ error }, 'AI content generation failed, falling back to template');
-    return generateWithoutAi(scraped, diagnosis, options);
+    return generateWithoutAi(scraped, options);
   }
 }
 
@@ -170,27 +163,6 @@ function buildBusinessContext(scraped: ScrapedSiteData): string {
   }
 
   return parts.join('\n') || 'No business information available';
-}
-
-function buildDiagnosisContext(diagnosis: DiagnosisResult): string {
-  const criticalIssues = diagnosis.issues
-    .filter(i => i.severity === 'critical')
-    .map(i => `- ${i.title}: ${i.description}`)
-    .join('\n');
-
-  const conversionIssues = diagnosis.categories.conversion.issues
-    .map(i => `- ${i.title}`)
-    .join('\n');
-
-  const parts = [];
-  if (criticalIssues) {
-    parts.push('Critical Issues:\n' + criticalIssues);
-  }
-  if (conversionIssues) {
-    parts.push('Conversion Issues:\n' + conversionIssues);
-  }
-
-  return parts.join('\n\n') || 'No significant issues found';
 }
 
 function buildCurrentContentContext(scraped: ScrapedSiteData): string {
@@ -364,7 +336,6 @@ function buildPageContent(
 
 function generateWithoutAi(
   scraped: ScrapedSiteData,
-  _diagnosis: DiagnosisResult,
   options: GenerationOptions
 ): GeneratedSite {
   const content = buildPageContent(scraped, {}, options);

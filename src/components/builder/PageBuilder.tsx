@@ -167,18 +167,18 @@ export function PageBuilder({
   }, [sections, theme, onSave]);
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
+    <div className="h-screen flex flex-col bg-background">
       {/* Toolbar */}
-      <div className="h-14 bg-white border-b flex items-center justify-between px-4">
+      <div className="h-14 bg-card border-b border-border flex items-center justify-between px-4">
         <div className="flex items-center gap-4">
           {siteSlug && (
-            <a href={`/sites/${siteSlug}`} className="text-sm text-gray-500 hover:text-gray-700">
+            <a href={`/sites/${siteSlug}`} className="text-sm text-muted-foreground hover:text-foreground">
               ← Back to site
             </a>
           )}
-          <h1 className="font-semibold text-gray-900">{pageTitle}</h1>
+          <h1 className="font-semibold text-foreground">{pageTitle}</h1>
           {hasUnsavedChanges && (
-            <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
+            <span className="text-xs text-orange-400 bg-orange-500/20 px-2 py-1 rounded">
               Unsaved changes
             </span>
           )}
@@ -190,7 +190,7 @@ export function PageBuilder({
             variant="ghost"
             size="sm"
             onClick={() => setShowLibrary(!showLibrary)}
-            className={cn(!showLibrary && 'text-gray-400')}
+            className={cn(!showLibrary && 'text-muted-foreground')}
           >
             <PanelLeftClose className="h-4 w-4" />
           </Button>
@@ -198,12 +198,12 @@ export function PageBuilder({
             variant="ghost"
             size="sm"
             onClick={() => setShowProperties(!showProperties)}
-            className={cn(!showProperties && 'text-gray-400')}
+            className={cn(!showProperties && 'text-muted-foreground')}
           >
             <PanelRightClose className="h-4 w-4" />
           </Button>
 
-          <div className="w-px h-6 bg-gray-200" />
+          <div className="w-px h-6 bg-border" />
 
           {/* Theme selector */}
           <ThemeSelector
@@ -211,7 +211,7 @@ export function PageBuilder({
             onThemeChange={handleThemeChange}
           />
 
-          <div className="w-px h-6 bg-gray-200" />
+          <div className="w-px h-6 bg-border" />
 
           {/* Preview toggle */}
           <Button
@@ -228,7 +228,7 @@ export function PageBuilder({
             size="sm"
             onClick={handleSave}
             disabled={!hasUnsavedChanges}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-primary hover:bg-primary/90"
           >
             <Save className="h-4 w-4 mr-2" />
             Save
@@ -256,7 +256,7 @@ export function PageBuilder({
             <div
               className={cn(
                 'min-h-full',
-                isPreviewMode ? 'bg-white' : 'bg-gray-200 p-8'
+                isPreviewMode ? 'bg-background' : 'bg-muted p-8'
               )}
             >
               <ThemeProvider theme={theme}>
@@ -264,11 +264,11 @@ export function PageBuilder({
                   className={cn(
                     isPreviewMode
                       ? ''
-                      : 'bg-white rounded-lg shadow-sm overflow-hidden max-w-6xl mx-auto'
+                      : 'bg-card rounded-lg shadow-sm overflow-hidden max-w-6xl mx-auto'
                   )}
                 >
                   {sections.length === 0 ? (
-                    <div className="min-h-[400px] flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg m-4">
+                    <div className="min-h-[400px] flex items-center justify-center text-muted-foreground border-2 border-dashed border-border rounded-lg m-4">
                       <div className="text-center">
                         <p className="text-lg mb-2">No sections yet</p>
                         <p className="text-sm">

@@ -38,3 +38,4 @@ lighthouse-results/
 
 # Claude
 .claude/
+.vercel

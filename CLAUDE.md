@@ -1,8 +1,8 @@
-# The Anti-Agency - Project Context
+# Cursor for Normies - Project Context
 
 ## What Is This?
 
-**The Anti-Agency** is a full-featured, AI-powered website builder platform. Users can create professional websites in minutes without coding - no agency fees, no complicated tools.
+**Cursor for Normies** is a full-featured, AI-powered website builder platform. Users can create and edit professional websites using natural language - no coding, no agency fees, no complicated tools.
 
 **Core value prop:** "Your website, always current" - AI-assisted content and maintenance.
 

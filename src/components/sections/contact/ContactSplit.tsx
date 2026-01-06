@@ -60,8 +60,11 @@ export function ContactSplit({
             <div className="space-y-6">
               {address && (
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-6 h-6 text-blue-600" />
+                  <div
+                    className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: 'var(--color-primary-100, #dbeafe)' }}
+                  >
+                    <MapPin className="w-6 h-6" style={{ color: 'var(--color-primary-600, #2563eb)' }} />
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-1">Address</h4>
@@ -72,8 +75,11 @@ export function ContactSplit({
 
               {phone && (
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-6 h-6 text-blue-600" />
+                  <div
+                    className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: 'var(--color-primary-100, #dbeafe)' }}
+                  >
+                    <Phone className="w-6 h-6" style={{ color: 'var(--color-primary-600, #2563eb)' }} />
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-1">Phone</h4>
@@ -86,8 +92,11 @@ export function ContactSplit({
 
               {email && (
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Mail className="w-6 h-6 text-blue-600" />
+                  <div
+                    className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: 'var(--color-primary-100, #dbeafe)' }}
+                  >
+                    <Mail className="w-6 h-6" style={{ color: 'var(--color-primary-600, #2563eb)' }} />
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-1">Email</h4>
@@ -100,8 +109,11 @@ export function ContactSplit({
 
               {hours && (
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Clock className="w-6 h-6 text-blue-600" />
+                  <div
+                    className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: 'var(--color-primary-100, #dbeafe)' }}
+                  >
+                    <Clock className="w-6 h-6" style={{ color: 'var(--color-primary-600, #2563eb)' }} />
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-1">Hours</h4>
@@ -167,7 +179,11 @@ export function ContactSplit({
                 />
               </div>
 
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+              <Button
+                type="submit"
+                className="w-full text-white"
+                style={{ backgroundColor: 'var(--color-primary-600, #2563eb)' }}
+              >
                 {submitButtonText}
               </Button>
             </form>

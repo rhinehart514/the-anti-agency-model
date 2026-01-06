@@ -72,7 +72,8 @@ export function HeroSplit({
                   <Button
                     asChild
                     size="lg"
-                    className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-lg"
+                    className="text-white px-8 py-6 text-lg"
+                    style={{ backgroundColor: 'var(--color-accent-500, #f97316)' }}
                   >
                     <a href={primaryCta.url}>{primaryCta.text}</a>
                   </Button>

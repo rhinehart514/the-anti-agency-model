@@ -1,5 +1,5 @@
 -- ============================================
--- The Anti-Agency Database Schema
+-- Cursor for Normies Database Schema
 -- Run this in your Supabase SQL Editor
 -- ============================================
 

@@ -1,4 +1,4 @@
-# The Anti-Agency - Product Completion Checklist
+# Cursor for Normies - Product Completion Checklist
 
 > Last updated: 2026-01-01
 > Status: MVP-ready / Soft-launch ready

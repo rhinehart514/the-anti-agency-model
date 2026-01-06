@@ -50,7 +50,10 @@ export function StatsSimple({
         <div className={`grid ${gridCols[columns]} gap-8`}>
           {stats.map((stat, index) => (
             <div key={index} className="text-center">
-              <div className={`text-4xl md:text-5xl font-bold mb-2 ${isLight ? 'text-white' : 'text-blue-600'}`}>
+              <div
+                className="text-4xl md:text-5xl font-bold mb-2"
+                style={{ color: isLight ? 'white' : 'var(--color-primary-600, #2563eb)' }}
+              >
                 {stat.prefix}
                 {stat.value}
                 {stat.suffix}

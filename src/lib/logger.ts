@@ -31,7 +31,7 @@ const baseOptions: LoggerOptions = {
   timestamp: pino.stdTimeFunctions.isoTime,
   // Base fields for all logs
   base: {
-    service: 'the-anti-agency',
+    service: 'cursor-for-normies',
     version: process.env.npm_package_version || '1.0.0',
   },
 };

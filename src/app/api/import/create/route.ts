@@ -18,7 +18,6 @@ const CreateSiteRequestSchema = z.object({
     sourceUrl: z.string().url(),
     sourcePlatform: z.string(),
     scrapedData: z.any().optional(),
-    diagnosisResult: z.any().optional(),
   }),
 
   // Optional customizations
@@ -125,7 +124,6 @@ export async function POST(request: NextRequest) {
         source_url: importData.sourceUrl,
         source_platform: importData.sourcePlatform,
         scraped_data: importData.scrapedData,
-        diagnosis_result: importData.diagnosisResult,
         import_status: 'completed',
       });
 

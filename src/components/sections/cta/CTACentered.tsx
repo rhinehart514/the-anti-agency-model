@@ -54,7 +54,11 @@ export function CTACentered({
               <Button
                 asChild
                 size="lg"
-                className={`px-8 py-6 text-lg ${isLight ? 'bg-white text-blue-600 hover:bg-gray-100' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                className="px-8 py-6 text-lg"
+                style={{
+                  backgroundColor: isLight ? 'white' : 'var(--color-primary-600, #2563eb)',
+                  color: isLight ? 'var(--color-primary-600, #2563eb)' : 'white',
+                }}
               >
                 <a href={primaryCta.url}>{primaryCta.text}</a>
               </Button>

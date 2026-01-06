@@ -89,7 +89,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-sm text-primary-500 mt-6">
-          Powered by The Anti-Agency
+          Powered by Cursor for Normies
         </p>
       </div>
     </div>

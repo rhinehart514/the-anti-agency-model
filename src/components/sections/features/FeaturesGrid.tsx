@@ -72,7 +72,12 @@ export function FeaturesGrid({
               key={index}
               className="group p-6 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
             >
-              <div className="w-12 h-12 bg-blue-600 text-white rounded-lg flex items-center justify-center mb-4 group-hover:bg-orange-500 transition-colors">
+              <div
+                className="w-12 h-12 text-white rounded-lg flex items-center justify-center mb-4 transition-colors"
+                style={{
+                  backgroundColor: 'var(--color-primary-500, #2563eb)',
+                }}
+              >
                 {iconMap[feature.icon] || <Star className="w-6 h-6" />}
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">

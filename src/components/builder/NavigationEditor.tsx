@@ -96,14 +96,14 @@ function SortableNavItem({ item, pages, onUpdate, onDelete }: SortableNavItemPro
       ref={setNodeRef}
       style={style}
       className={cn(
-        'flex items-center gap-3 p-3 bg-white border rounded-lg',
+        'flex items-center gap-3 p-3 bg-card border border-border rounded-lg',
         isDragging && 'opacity-50 shadow-lg'
       )}
     >
       <button
         {...attributes}
         {...listeners}
-        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+        className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
       >
         <GripVertical className="h-4 w-4" />
       </button>
@@ -151,7 +151,7 @@ function SortableNavItem({ item, pages, onUpdate, onDelete }: SortableNavItemPro
             </Select>
           ) : item.type === 'section' ? (
             <div className="flex items-center gap-1 flex-1">
-              <span className="text-gray-400">#</span>
+              <span className="text-muted-foreground">#</span>
               <Input
                 value={item.target}
                 onChange={(e) => onUpdate(item.id, { target: e.target.value })}
@@ -177,7 +177,7 @@ function SortableNavItem({ item, pages, onUpdate, onDelete }: SortableNavItemPro
             size="sm"
             className={cn(
               'h-8 w-8 p-0',
-              item.openInNewTab && 'text-blue-600'
+              item.openInNewTab && 'text-primary'
             )}
             onClick={() => onUpdate(item.id, { openInNewTab: !item.openInNewTab })}
             title={item.openInNewTab ? 'Opens in new tab' : 'Opens in same tab'}
@@ -188,7 +188,7 @@ function SortableNavItem({ item, pages, onUpdate, onDelete }: SortableNavItemPro
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
+          className="h-8 w-8 p-0 text-muted-foreground hover:text-red-400"
           onClick={() => onDelete(item.id)}
         >
           <Trash2 className="h-4 w-4" />
@@ -271,7 +271,7 @@ export function NavigationEditor({ items, pages, onChange }: NavigationEditorPro
 
         <div className="py-4 space-y-3">
           {localItems.length === 0 ? (
-            <div className="text-center py-8 text-gray-400 border-2 border-dashed rounded-lg">
+            <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-lg">
               <LinkIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">No navigation items</p>
               <p className="text-xs">Click "Add Link" to create one</p>

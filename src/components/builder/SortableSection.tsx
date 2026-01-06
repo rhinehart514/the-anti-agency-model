@@ -47,14 +47,14 @@ export function SortableSection({
       className={cn(
         'relative group',
         isDragging && 'opacity-50 z-50',
-        isSelected && 'ring-2 ring-blue-500 ring-offset-2'
+        isSelected && 'ring-2 ring-primary ring-offset-2 ring-offset-background'
       )}
       onClick={onSelect}
     >
       {/* Section Controls */}
       <div
         className={cn(
-          'absolute top-2 left-2 z-20 flex items-center gap-1 bg-white rounded-md shadow-lg border opacity-0 group-hover:opacity-100 transition-opacity',
+          'absolute top-2 left-2 z-20 flex items-center gap-1 bg-card rounded-md shadow-lg border border-border opacity-0 group-hover:opacity-100 transition-opacity',
           isSelected && 'opacity-100'
         )}
       >
@@ -62,14 +62,14 @@ export function SortableSection({
         <button
           {...attributes}
           {...listeners}
-          className="p-2 hover:bg-gray-100 cursor-grab active:cursor-grabbing rounded-l-md"
+          className="p-2 hover:bg-muted cursor-grab active:cursor-grabbing rounded-l-md"
           title="Drag to reorder"
         >
-          <GripVertical className="h-4 w-4 text-gray-500" />
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
         </button>
 
         {/* Component Name */}
-        <span className="px-2 text-sm font-medium text-gray-700">
+        <span className="px-2 text-sm font-medium text-foreground">
           {componentDef?.name || section.componentId}
         </span>
 
@@ -79,10 +79,10 @@ export function SortableSection({
             e.stopPropagation();
             onSelect();
           }}
-          className="p-2 hover:bg-gray-100"
+          className="p-2 hover:bg-muted"
           title="Edit section"
         >
-          <Settings className="h-4 w-4 text-gray-500" />
+          <Settings className="h-4 w-4 text-muted-foreground" />
         </button>
 
         {/* Delete */}
@@ -91,10 +91,10 @@ export function SortableSection({
             e.stopPropagation();
             onDelete();
           }}
-          className="p-2 hover:bg-red-50 rounded-r-md"
+          className="p-2 hover:bg-red-500/10 rounded-r-md"
           title="Delete section"
         >
-          <Trash2 className="h-4 w-4 text-red-500" />
+          <Trash2 className="h-4 w-4 text-red-400" />
         </button>
       </div>
 
@@ -103,7 +103,7 @@ export function SortableSection({
         {Component ? (
           <Component {...section.props} __sectionId={section.id} __isEditing={true} />
         ) : (
-          <div className="p-8 bg-gray-100 text-center text-gray-500">
+          <div className="p-8 bg-muted text-center text-muted-foreground">
             Component "{section.componentId}" not found
           </div>
         )}

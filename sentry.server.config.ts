@@ -23,7 +23,7 @@ Sentry.init({
   // Add custom tags for all events
   initialScope: {
     tags: {
-      service: 'the-anti-agency',
+      service: 'cursor-for-normies',
     },
   },
 
