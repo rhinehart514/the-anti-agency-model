@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ChatInterface } from '@/components/ai';
 import {
   ArrowLeft,
   Check,
@@ -15,6 +16,9 @@ import {
   Trash2,
   ChevronUp,
   ChevronDown,
+  MessageSquare,
+  X,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeProvider, defaultTheme, themePresets, type Theme } from '@/lib/themes';
@@ -40,6 +44,8 @@ export default function PreviewPage() {
   const [selectedTheme, setSelectedTheme] = useState<Theme>(defaultTheme);
   const [isCreating, setIsCreating] = useState(false);
   const [showThemes, setShowThemes] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [previewContent, setPreviewContent] = useState<SectionWithId[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -95,6 +101,34 @@ export default function PreviewPage() {
     newSections.forEach((s, i) => (s.orderIndex = i));
     setSections(newSections);
   };
+
+  // Handle preview changes from AI chat
+  const handlePreviewChange = (preview: unknown) => {
+    if (!preview) {
+      setPreviewContent(null);
+      return;
+    }
+
+    const previewData = preview as { sections?: SectionWithId[] };
+    if (previewData.sections) {
+      setPreviewContent(previewData.sections.map((s, i) => ({
+        ...s,
+        id: s.id || `section-preview-${i}`,
+        orderIndex: i,
+      })));
+    }
+  };
+
+  // Apply AI-suggested changes
+  const handleApplyChanges = async (operations: unknown[]) => {
+    if (previewContent) {
+      setSections(previewContent);
+      setPreviewContent(null);
+    }
+  };
+
+  // Get the sections to display (preview or actual)
+  const displaySections = previewContent || sections;
 
   const handleCreateSite = async () => {
     if (!siteName.trim() || !siteSlug.trim()) {
@@ -191,6 +225,16 @@ export default function PreviewPage() {
               </Button>
 
               <Button
+                variant={showChat ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setShowChat(!showChat)}
+                className="gap-2"
+              >
+                <Sparkles className="h-4 w-4" />
+                AI Edit
+              </Button>
+
+              <Button
                 onClick={handleCreateSite}
                 disabled={isCreating}
                 size="sm"
@@ -260,11 +304,29 @@ export default function PreviewPage() {
         )}
       </header>
 
-      {/* Preview Canvas */}
-      <div className="pb-8">
-        <ThemeProvider theme={selectedTheme}>
-          <div className="bg-white min-h-screen">
-            {sections.map((section, index) => {
+      {/* Main Layout with Chat Sidebar */}
+      <div className="flex h-[calc(100vh-57px)]">
+        {/* Preview Canvas */}
+        <div className={cn(
+          'flex-1 overflow-auto pb-8 transition-all duration-300',
+          showChat && 'mr-[400px]'
+        )}>
+          <ThemeProvider theme={selectedTheme}>
+            <div className={cn(
+              'bg-white min-h-screen',
+              previewContent && 'ring-2 ring-primary/20'
+            )}>
+              {/* Preview indicator */}
+              {previewContent && (
+                <div className="sticky top-0 z-20 bg-primary/10 border-b border-primary/20 px-4 py-2">
+                  <div className="flex items-center justify-center gap-2 text-sm text-primary">
+                    <Sparkles className="h-4 w-4" />
+                    <span>Preview Mode - Review changes before applying</span>
+                  </div>
+                </div>
+              )}
+
+              {displaySections.map((section, index) => {
               const Component = getReactComponent(section.componentId);
               if (!Component) return null;
 
@@ -283,7 +345,7 @@ export default function PreviewPage() {
                       </button>
                       <button
                         onClick={() => handleMoveSection(index, 'down')}
-                        disabled={index === sections.length - 1}
+                        disabled={index === displaySections.length - 1}
                         className="p-1.5 hover:bg-muted rounded disabled:opacity-30"
                         title="Move down"
                       >
@@ -305,8 +367,49 @@ export default function PreviewPage() {
                 </div>
               );
             })}
+            </div>
+          </ThemeProvider>
+        </div>
+
+        {/* AI Chat Sidebar */}
+        <div
+          className={cn(
+            'fixed right-0 top-[57px] bottom-0 w-[400px] bg-card border-l border-border transition-transform duration-300 z-40',
+            showChat ? 'translate-x-0' : 'translate-x-full'
+          )}
+        >
+          <div className="flex flex-col h-full">
+            {/* Chat Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <h2 className="font-semibold">AI Editor</h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowChat(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Chat Interface */}
+            <ChatInterface
+              onPreviewChange={handlePreviewChange}
+              onApplyChanges={handleApplyChanges}
+              className="flex-1"
+              placeholder="Describe what you want to change..."
+              suggestions={[
+                'Make the headline more compelling',
+                'Change the background color to blue',
+                'Add a new testimonial',
+                'Update the call-to-action text',
+              ]}
+            />
           </div>
-        </ThemeProvider>
+        </div>
       </div>
     </div>
   );
